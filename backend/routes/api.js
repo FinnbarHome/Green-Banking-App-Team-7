@@ -38,6 +38,35 @@ router.get("/companies/:accountNumber", async (req, res) => {
 });
 
 
+// POST a new company
+router.post("/companies", async (req, res) => {
+  try {
+    const { "Account Number": accountNumber, "Company Name": companyName } = req.body;
+
+    // Check if the account number already exists
+    const existingAccount = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+    if (existingAccount) {
+      return res.status(400).json({ error: "A company with the same Account Number already exists" });
+    }
+
+    // Check if the company name already exists
+    const existingCompany = await db.collection("Companies").findOne({ "Company Name": companyName });
+    if (existingCompany) {
+      return res.status(400).json({ warning: "A company with the same name already exists" });
+    }
+
+    // Insert the new company if validations pass
+    const newCompany = await db.collection("Companies").insertOne(req.body);
+
+    console.log(newCompany);
+    res.status(201).json(newCompany);
+
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+
 
 module.exports = router;
 
