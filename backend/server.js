@@ -1,24 +1,55 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
-require('dotenv').config(); // Load environment variables from .env
+const apiRoutes = require('./routes/api'); // Import API routes
 
-// Initialize Express app
 const app = express();
-app.use(cors());
-app.use(express.json());
 
-// Database Connection and Server Start
+// Validate required environment variables
+const requiredEnvVars = ['PORT', 'MONGO_URI'];
+
+requiredEnvVars.forEach((key) => {
+    if (!process.env[key]) {
+        console.error(`ERROR: ${key} not specified in .env`);
+        process.exit(1);
+    }
+});
+
+// Middleware for JSON and CORS
+app.use(express.json());
+app.use(cors());
+
+// Establish Database Connection
 connectDB()
     .then(() => {
-        // Start server after successful DB connection
         const PORT = process.env.PORT || 3000;
-        app.listen(PORT, () => console.log(`API server listening on port ${PORT}!`));
+        // Start the server after successful DB connection
+        app.listen(PORT, () => {
+            console.log(`API server listening on port ${PORT}!`);
+        });
     })
-    .catch(error => {
-        console.error("Database connection failed", error);
-        process.exit(1); // Exit the process with failure
+    .catch((error) => {
+        console.error("ERROR: Database connection failed", error);
+        process.exit(1); // Terminate process if DB connection fails
     });
 
-// Basic API route
-app.use('/api', require('./routes/api'));
+// API routes
+app.use('/api', apiRoutes);
+
+// Root endpoint for basic health check
+app.get('/', (req, res) => {
+    res.send("Hello World!");
+});
+
+// 404 Error Handler for non-existent routes
+app.use((req, res, next) => {
+    res.status(404).json({ error: "Resource not found" });
+});
+
+// Generic Error Handler for all uncaught errors
+app.use((error, req, res, next) => {
+    console.error("ERROR:", error.stack);
+    res.status(500).json({ error: "Internal Server Error" });
+});
+
