@@ -1,20 +1,24 @@
-// routes/api.js
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const Company = require('../models/Company');
+const mongoose = require("mongoose");
+const db = mongoose.connection;
 
-// Route to get all companies
-router.get('/companies', async (req, res) => {
-    try {
-        const companies = await Company.find();
-        if (companies.length === 0) {
-            return res.status(404).json({ msg: 'No companies found' });
-        }
-        res.json(companies);
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send('Server Error');
-    }
+// Error handling function
+function handleError(res, error) {
+  console.error(error);
+  res.status(500).json({ error: error.message });
+}
+
+// GET all Companies
+router.get("/companies", async (req, res) => {
+  try {
+    const companies = await db.collection("Companies").find({}).toArray();
+    console.log(companies);
+    res.json(companies);
+  } catch (error) {
+    handleError(res, error);
+  }
 });
 
 module.exports = router;
+
