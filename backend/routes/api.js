@@ -20,5 +20,24 @@ router.get("/companies", async (req, res) => {
   }
 });
 
+// GET a specific company by Account Number
+router.get("/companies/:accountNumber", async (req, res) => {
+  try {
+    const company = await db
+      .collection("Companies")
+      .findOne({ "Account Number": parseInt(req.params.accountNumber) });
+    
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+    
+    res.json(company);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+
+
 module.exports = router;
 
