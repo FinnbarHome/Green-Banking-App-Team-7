@@ -1,51 +1,55 @@
 require('dotenv').config();
 const express = require('express');
-const connectDB = require('./config/db');
-const app = express();
 const cors = require('cors');
+const connectDB = require('./config/db');
+const apiRoutes = require('./routes/api'); // Import API routes
 
-
-// Validate required environment variables
-if (!process.env.PORT) {
-    console.error("ERROR: PORT not specified in .env");
-    process.exit(1);
-}
+const app = express();
 
 // Validate required environment variables
-if (!process.env.MONGO_URI) {
-    console.error("ERROR: MONGO_URI not specified in .env");
-    process.exit(1);
-}
+const requiredEnvVars = ['PORT', 'MONGO_URI'];
 
-// Middleware
+requiredEnvVars.forEach((key) => {
+    if (!process.env[key]) {
+        console.error(`ERROR: ${key} not specified in .env`);
+        process.exit(1);
+    }
+});
+
+// Middleware for JSON and CORS
 app.use(express.json());
 app.use(cors());
 
-// Database Connection
-connectDB().then(() => {
-    // Server Start
-    const PORT = process.env.PORT || 3000;
-    app.listen(PORT, () => console.log(`API server listening on port ${PORT}!`));
-}).catch(error => {
-    console.error("Database connection failed", error);
-    process.exit(1);
-});
+// Establish Database Connection
+connectDB()
+    .then(() => {
+        const PORT = process.env.PORT || 3000;
+        // Start the server after successful DB connection
+        app.listen(PORT, () => {
+            console.log(`API server listening on port ${PORT}!`);
+        });
+    })
+    .catch((error) => {
+        console.error("ERROR: Database connection failed", error);
+        process.exit(1); // Terminate process if DB connection fails
+    });
 
-// Define API routes
-app.use('/api', require('./routes/api'));
+// API routes
+app.use('/api', apiRoutes);
 
-// Root Endpoint
-app.get("/", (req, res) => {
+// Root endpoint for basic health check
+app.get('/', (req, res) => {
     res.send("Hello World!");
 });
 
-// 404 Error Handler (for any unhandled routes)
+// 404 Error Handler for non-existent routes
 app.use((req, res, next) => {
-    res.status(404).send("Resource not found");
+    res.status(404).json({ error: "Resource not found" });
 });
 
-// Generic Error Handler
+// Generic Error Handler for all uncaught errors
 app.use((error, req, res, next) => {
-    console.error(error.stack);
-    res.status(500).send('Something broke!');
+    console.error("ERROR:", error.stack);
+    res.status(500).json({ error: "Internal Server Error" });
 });
+
