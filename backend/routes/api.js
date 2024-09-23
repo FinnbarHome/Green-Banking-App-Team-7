@@ -66,6 +66,27 @@ router.post("/companies", async (req, res) => {
   }
 });
 
+// PUT (or PATCH) - Add Balance field to all existing companies
+router.put("/companies/add-balance", async (req, res) => {
+  try {
+    const { Balance } = req.body;
+
+    // Check if the Balance field is provided
+    if (Balance === undefined) {
+      return res.status(400).json({ error: "Balance field is required" });
+    }
+
+    // Update all companies and add the 'Balance' field with the provided value
+    const result = await db.collection("Companies").updateMany({}, { $set: { Balance: Balance } });
+
+    console.log(result);
+    res.json({ msg: `Balance field added to ${result.matchedCount} companies` });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+
 
 
 module.exports = router;
