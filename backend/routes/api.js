@@ -99,26 +99,21 @@ router.put("/companies/update-balance/:accountNumber", async (req, res) => {
   try {
     const accountNumber = parseInt(req.params.accountNumber);
     const { amount } = req.body;
-
     // Validate the amount
     if (amount === undefined || isNaN(amount)) {
       return res.status(400).json({ error: "A valid amount is required to update the balance" });
     }
-
     // Update the Balance by incrementing/decrementing it
     const updateResult = await db.collection("Companies").updateOne(
       { "Account Number": accountNumber }, // Find the company by Account Number
       { $inc: { Balance: amount } } // Increment/decrement the Balance field
     );
-
     // If no company was found and updated, return a 404 error
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
-
     // Retrieve the updated document to send back as a response
     const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
-
     // Return the updated company with the new Balance
     res.json(updatedCompany); // Send the updated document in the response
   } catch (error) {
@@ -133,26 +128,21 @@ router.put("/companies/update-xp/:accountNumber", async (req, res) => {
   try {
     const accountNumber = parseInt(req.params.accountNumber);
     const { xpAmount } = req.body;
-
     // Validate the xpAmount
     if (xpAmount === undefined || isNaN(xpAmount)) {
       return res.status(400).json({ error: "A valid xpAmount is required to update the XP" });
     }
-
     // Update the XP for the company by Account Number
     const updateResult = await db.collection("Companies").updateOne(
       { "Account Number": accountNumber }, // Find the company by Account Number
       { $inc: { XP: xpAmount } } // Increment/decrement the XP field
     );
-
     // If no company was found and updated, return a 404 error
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
-
     // Retrieve the updated document to send back as a response
     const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
-
     // Return the updated company with the new XP
     res.json(updatedCompany); // Send the updated document in the response
   } catch (error) {
