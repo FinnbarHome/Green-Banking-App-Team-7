@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api'); // Import API routes
+const discountsRoutes = require("./routes/discounts"); 
 
 const app = express();
 
@@ -36,6 +37,8 @@ connectDB()
 
 // API routes
 app.use('/api', apiRoutes);
+app.use("/api", discountsRoutes);
+
 
 // Root endpoint for basic health check
 app.get('/', (req, res) => {
