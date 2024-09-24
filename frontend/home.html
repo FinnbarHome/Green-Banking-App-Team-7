@@ -29,26 +29,32 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="float-left bg-gray-400 rounded-full p-1 border-2" width="20%" height ="20%" viewBox="0 0 448 512"><path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/></svg>
                 </div>
                 <div class="text-center py-2">
-                    <h2 class="text-white font-bold">Username</h2>
-                    <h2 class="text-white">Account Balance:</h2>
-                    <h2 class="text-white">Green Level: </h2>
+                    <h2 id="username" class="text-white font-bold"></h2>
+                    <h2 class="text-white">Account Balance: <span id="accountBalance"></span></h2>
+                    <h2 class="text-white">Green Level: <span id="greenLevel"></span></h2>
                 </div>
             </div>
         </div>
         <h1 class="text-xl font-bold text-white mt-5 text-center mb-4">Your Transaction History</h1>
         <div class="mt-5 mb-5 border-green-800 border-2 border-t-0 border-x-0">
+          <a href="analysis.html">
             <div class="grid grid-flow-col gap-1 mb-4">
                 <h2 class="bg-red-900 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company Name Here</h2>
                 <h2 class="row-start-1 text-xl text-white text-right px-5 py-4 rounded-r-lg bg-gray-600 text-red-400">-£100.00</h2>
             </div>
+          </a>
+          <a href="analysis.html">
             <div class="grid grid-flow-col gap-1 mb-4">
                 <h2 class="bg-orange-900 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company Name Here</h2>
                 <h2 class="row-start-1 text-xl text-white text-right px-5 py-4 rounded-r-lg bg-gray-600 text-red-400">-£100.00</h2>
             </div>
+          </a>
+          <a href="analysis.html">
             <div class="grid grid-flow-col gap-1 mb-4">
                 <h2 class="bg-green-800 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company Name Here</h2>
                 <h2 class="row-start-1 text-xl text-white text-right px-5 py-4 rounded-r-lg bg-gray-600 text-red-400">-£100.00</h2>
             </div>
+          </a>
         </div>
       </div>
     </div>
@@ -58,4 +64,5 @@
     </div>
   </footer>
 </body>
+<script src="main.js"></script>
 </html>
