@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="./output.css" rel="stylesheet">
+    <script src ="main.js"></script>
 </head>
 <body class="bg-gray-900">
   <nav class="bg-green-900">
@@ -23,6 +24,10 @@
           <div class="flex justify-center">
             <img class="border-4 border-green-800 mb-5 mt-6 rounded-full justify-center flex" width="50%" height="50%" src="bank.jpg">
           </div>
+          
+          <div class="flex justify-center">
+            <p id="errorTag" class="text-center text-red-400 mb-1"></p>
+          </div>
           <div class="flex justify-center items-center">
             <h2 class="px-3 text-white font-bold">Username: </h2>
             <input id="username" type="text" class="text-center flex mt-3 mb-2 p-1 bg-white border shadow-sm placeholder-slate-400 block rounded-lg" placeholder="Username"/>
@@ -32,7 +37,7 @@
             <input id="balance" type="number" class="text-center flex my-3 p-1 bg-white border shadow-sm placeholder-slate-400 block rounded-lg" placeholder="0.00"/>
           </div>
           <div class="flex justify-center items-center">
-            <button class="bg-green-700 text-white font-bold mt-2 py-2 px-4 rounded">Sign up!</button>
+            <button class="bg-green-700 text-white font-bold mt-2 py-2 px-4 rounded" onclick="attemptSignup()">Sign up!</button>
           </div>
           <p class="text-white text-center mt-5">Already a user? <a class="text-blue-400 hover:underline" href="login.html">Sign in here.</a></p>
         </div>
