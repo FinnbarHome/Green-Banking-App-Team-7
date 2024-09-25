@@ -38,6 +38,12 @@ router.get("/companies/:accountNumber", async (req, res) => {
   }
 });
 
+// SIMPLE TEST
+
+router.get("/test", async (req, res) => {
+  res.status(200).json({ message: "Hello yes this works"})
+});
+
 
 // POST a new company
 router.post("/companies", async (req, res) => {
