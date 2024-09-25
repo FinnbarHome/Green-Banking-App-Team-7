@@ -1,58 +1,52 @@
-require('dotenv').config();
+// Import dependencies
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
-const apiRoutes = require('./routes/api'); // Import API routes
-const discountsRoutes = require("./routes/discounts"); 
+const connectDB = require('./config/db'); // MongoDB connection function
+const apiRoutes = require('./routes/api');
+const serverless = require('serverless-http'); // For AWS Lambda compatibility
+require('dotenv').config(); // Load environment variables from .env
 
 const app = express();
-
-// Validate required environment variables
-const requiredEnvVars = ['PORT', 'MONGO_URI'];
-
-requiredEnvVars.forEach((key) => {
-    if (!process.env[key]) {
-        console.error(`ERROR: ${key} not specified in .env`);
-        process.exit(1);
-    }
-});
 
 // Middleware for JSON and CORS
 app.use(express.json());
 app.use(cors());
 
-// Establish Database Connection
-connectDB()
-    .then(() => {
-        const PORT = process.env.PORT || 3000;
-        // Start the server after successful DB connection
-        app.listen(PORT, () => {
-            console.log(`API server listening on port ${PORT}!`);
-        });
-    })
-    .catch((error) => {
-        console.error("ERROR: Database connection failed", error);
-        process.exit(1); // Terminate process if DB connection fails
-    });
+// Connect to MongoDB
+let dbInitialized = false;
+
+const initializeDB = async () => {
+  if (!dbInitialized) {
+    try {
+      await connectDB(); // Connect to MongoDB if not already connected
+      dbInitialized = true;
+      console.log('Database connected');
+    } catch (error) {
+      console.error('ERROR: Database connection failed', error);
+      process.exit(1); // Terminate process if DB connection fails
+    }
+  }
+};
+
+// Middleware to ensure DB is connected before handling any requests
+app.use(async (req, res, next) => {
+  await initializeDB(); // Ensure DB connection is initialized before proceeding
+  next();
+});
 
 // API routes
 app.use('/api', apiRoutes);
-app.use("/api", discountsRoutes);
-
-
-// Root endpoint for basic health check
-app.get('/', (req, res) => {
-    res.send("Hello World!");
-});
 
 // 404 Error Handler for non-existent routes
 app.use((req, res, next) => {
-    res.status(404).json({ error: "Resource not found" });
+  res.status(404).json({ error: 'Resource not found' });
 });
 
-// Generic Error Handler for all uncaught errors
+// Error handler
 app.use((error, req, res, next) => {
-    console.error("ERROR:", error.stack);
-    res.status(500).json({ error: "Internal Server Error" });
+  console.error(error);
+  res.status(500).json({ error: 'Internal Server Error' });
 });
 
+// Export the app for AWS Lambda
+module.exports.handler = serverless(app); // Export the app as a Lambda-compatible handler

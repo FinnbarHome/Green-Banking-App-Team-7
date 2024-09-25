@@ -3,6 +3,9 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const db = mongoose.connection;
 
+const AWS = require('aws-sdk');
+const s3 = new AWS.s3();
+
 // Error handling function
 function handleError(res, error) {
   console.error(error);
