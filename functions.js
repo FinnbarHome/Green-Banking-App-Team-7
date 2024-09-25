@@ -65,13 +65,16 @@ function xp(categoryScore, userXP, transactionAmount, greenStreak, redStreak, us
   var XPGain = envImpactScore * transactionAmount;
   userXP += XPGain;
   level = getUserLevel(userXP);
+
+  //update database here
   
   return {
     XPGain: XPGain,
     userXP: userXP,
     newGreenStreak: greenStreak,
     newRedStreak: redStreak,
-    appliedEIS: envImpactScore
+    appliedEIS: envImpactScore,
+    level,
   };
 }
 
@@ -90,5 +93,7 @@ function greenAlternatives(companies) {
   function transaction(transactionAmount, accountBalance)
   {
     accountBalance =- transactionAmount;
-    //add in update balance function
+    //update database
+
+    return accountBalance;
   }
