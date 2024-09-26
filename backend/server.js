@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api'); // Import API routes
 const discountsRoutes = require("./routes/discounts"); 
+const path = require('path'); // Add this line
 
 const app = express();
 
@@ -20,6 +21,9 @@ requiredEnvVars.forEach((key) => {
 // Middleware for JSON and CORS
 app.use(express.json());
 app.use(cors());
+
+// Serve static files from the frontend folder
+app.use(express.static(path.join(__dirname, '../frontend'))); // Add this line
 
 // Establish Database Connection
 connectDB()
@@ -39,7 +43,6 @@ connectDB()
 app.use('/api', apiRoutes);
 app.use("/api", discountsRoutes);
 
-
 // Root endpoint for basic health check
 app.get('/', (req, res) => {
     res.send("Hello World!");
@@ -55,4 +58,3 @@ app.use((error, req, res, next) => {
     console.error("ERROR:", error.stack);
     res.status(500).json({ error: "Internal Server Error" });
 });
-
