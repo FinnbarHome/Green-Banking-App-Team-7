@@ -35,6 +35,21 @@ router.get("/companies/:accountNumber", async (req, res) => {
   }
 });
 
+// GET a specific company by Account Name
+router.get("/companies/name/:companyName", async (req, res) => {
+  try {
+    const company = await db
+      .collection("Companies")
+      .findOne({ "Company Name": req.params.companyName });
+    if (!company) {
+      return res.status(404).json({ error: "No company with that name exists." });
+    }
+    res.json(company);
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 // POST login route
 router.post("/login", async (req, res) => {
   try {
