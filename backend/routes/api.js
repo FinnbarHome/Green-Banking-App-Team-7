@@ -38,16 +38,17 @@ router.get("/companies/:accountNumber", async (req, res) => {
 // POST login route
 router.post("/login", async (req, res) => {
   try {
-    const { username } = req.body;
+    const { username, accountNumber } = req.body;
 
-    // Find a company by username or account number
-    const company = await db.collection("Companies").findOne({ "Company Name": username });
+    // Find a company by username and account number
+    const company = await db.collection("Companies").findOne({
+      "Company Name": username,
+      "Account Number": parseInt(accountNumber)
+    });
 
     if (!company) {
-      return res.status(404).json({ error: "Company not found" });
+      return res.status(404).json({ error: "Company not found or account number does not match" });
     }
-
-    // Here you could add password validation or any other security checks
 
     // Return the account number of the company as part of the login process
     res.json({ accountNumber: company["Account Number"] });
@@ -55,6 +56,7 @@ router.post("/login", async (req, res) => {
     handleError(res, error);
   }
 });
+
 
 
 // POST a new company
@@ -66,11 +68,8 @@ router.post("/companies", async (req, res) => {
       return res.status(400).json({ error: "Company Name and Balance are required." });
     }
 
-    // Check if the account number already exists
-    const existingAccount = await db.collection("Companies").findOne({ "Company Name": companyName });
-    if (existingAccount) {
-      return res.status(400).json({ error: "A company with the same name already exists" });
-    }
+    const existingCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
+    const accountNumber = existingCompany.length > 0 ? existingCompany[0]["Account Number"] + 1 : 1;
 
     const newCompany = {
       "Company Name": companyName,
@@ -78,6 +77,7 @@ router.post("/companies", async (req, res) => {
       "Carbon Emissions": 0,
       "Waste Management": 0,
       "Sustainability Practises": 0,
+      "Account Number": accountNumber,
       "Balance": Balance,
       "XP": 0,
       "Summary": "",
