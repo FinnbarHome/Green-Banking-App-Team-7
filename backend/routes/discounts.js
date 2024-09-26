@@ -47,10 +47,19 @@ router.post("/discounts", async (req, res) => {
     // Insert the new discount into the collection
     const newDiscount = { DiscountID, Company, LevelReq, DiscountCode, Description };
     const result = await db.collection("Discounts").insertOne(newDiscount);
-    res.status(201).json(result.ops[0]); // Return the newly created discount
+    // Return the newly created discount
+    res.status(201).json({
+      _id: result.insertedId,
+      DiscountID,
+      Company,
+      LevelReq,
+      DiscountCode,
+      Description
+    });
   } catch (error) {
     handleError(res, error);
   }
 });
+
 
 module.exports = router;
