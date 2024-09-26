@@ -35,6 +35,27 @@ router.get("/companies/:accountNumber", async (req, res) => {
   }
 });
 
+// POST login route
+router.post("/login", async (req, res) => {
+  try {
+    const { username } = req.body;
+
+    // Find a company by username or account number
+    const company = await db.collection("Companies").findOne({ "Company Name": username });
+
+    if (!company) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+
+    // Here you could add password validation or any other security checks
+
+    // Return the account number of the company as part of the login process
+    res.json({ accountNumber: company["Account Number"] });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 
 // POST a new company
 router.post("/companies", async (req, res) => {
