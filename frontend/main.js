@@ -69,6 +69,7 @@ function loadAccountDetails()
     greenLevel.textContent = "{Level}";
 
     // this will append the list for each payment made.
+    document.getElementById("pastPayments").innerHTML = "";
     document.getElementById("pastPayments").innerHTML += `
     <a href="analysis.html#">
         <div class="grid grid-flow-col gap-1 mb-4">
