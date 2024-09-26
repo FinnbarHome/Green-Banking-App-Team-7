@@ -61,5 +61,19 @@ router.post("/discounts", async (req, res) => {
   }
 });
 
+// DELETE a discount by DiscountID
+router.delete("/discounts/:discountID", async (req, res) => {
+  try {
+    const discountID = parseInt(req.params.discountID);
+    // Find and delete the discount with the specified DiscountID
+    const result = await db.collection("Discounts").deleteOne({ DiscountID: discountID });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Discount not found" });
+    }
+    res.json({ message: `Discount with DiscountID ${discountID} deleted successfully` });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
 
 module.exports = router;

@@ -10,7 +10,7 @@ function handleError(res, error) {
   res.status(500).json({ error: error.message });
 }
 
-// POST Create a new transaction with Reference
+// POST Create a new transaction
 router.post("/transactions", async (req, res) => {
     try {
       const { Recipient, Sender, Amount, Reference } = req.body;
@@ -24,7 +24,6 @@ router.post("/transactions", async (req, res) => {
       if (!recipientExists) {
         return res.status(400).json({ error: "Recipient account number not found" });
       }
-  
       if (!senderExists) {
         return res.status(400).json({ error: "Sender account number not found" });
       }
@@ -42,7 +41,7 @@ router.post("/transactions", async (req, res) => {
     } catch (error) {
       handleError(res, error);
     }
-  });
+});
   
 
 // GET View all transactions
@@ -73,3 +72,4 @@ router.get("/transactions/:accountNumber", async (req, res) => {
 });
 
 module.exports = router;
+
