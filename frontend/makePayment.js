@@ -1,62 +1,75 @@
-async function makePayment()
-{
-    var paymentAmount = document.getElementById("payment-amount").value;
+document.getElementById("payNowButton").addEventListener("click", async (event) => {
+  event.preventDefault(); // Prevent form from submitting and reloading the page
+
+  try {
+    var paymentAmount = parseFloat(document.getElementById("payment-amount").value);
     var payeeName = document.getElementById("payee-name").value;
-    const response = await fetch(`/api/companies/name/` + payeeName);
 
-    // Check if the response is ok
-    if (!response.ok) {
-        const errorData = await response.json();
-        console.error("Error fetching data:", errorData.error);
-        return; // Exit if response is not ok
-    }
-    else
-    {
-        console.log(response["Account Number"]);
-        return;
+    if (!payeeName) {
+      console.error("Payee name is required");
+      return;
     }
 
-
-    /*
-    try 
-    {
-        const accountNumber = localStorage.getItem('accountNumber');
-        const response = await fetch("/companies/update-balance/${accountNumber}", { 
-            method: 'PUT', 
-            headers: { 
-              'Content-type': 'application/json'
-            }, 
-            body: JSON.stringify({amount: -paymentAmount}) 
-          }); 
-
-        // If payment could be made.
-        if (response.ok) 
-        {
-            try 
-            {
-                // const payeeAccNumber = ;
-                const response = await fetch("/companies/update-balance/:", { 
-                    method: 'PUT', 
-                    headers: { 
-                      'Content-type': 'application/json'
-                    }, 
-                    body: JSON.stringify({amount: paymentAmount}) 
-                  }); 
-        
-                // If payment could be made.
-                if (response.ok) 
-                {
-                    
-                }
-            }
-            catch(error)
-            {
-
-            }
-        }
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      console.error("Invalid payment amount");
+      return;
     }
-    catch(error)
-    {
 
-    }*/
-}
+    // Fetch payee's company data
+    const payeeResponse = await fetch(`/api/companies/name/${payeeName}`);
+    
+    if (!payeeResponse.ok) {
+      const errorData = await payeeResponse.json();
+      console.error("Error fetching payee data:", errorData.error);
+      return;
+    }
+
+    const payeeData = await payeeResponse.json();
+    console.log("Payee data:", payeeData);
+
+    if (!payeeData || !payeeData["Account Number"]) {
+      console.error("Payee not found or invalid data received");
+      return;
+    }
+
+    const payeeAccountNumber = payeeData["Account Number"];
+
+    // Get payer's account number from localStorage
+    const payerAccountNumber = localStorage.getItem('accountNumber');
+    if (!payerAccountNumber) {
+      console.error("Payer account number not found in localStorage");
+      return;
+    }
+
+    // Update payer's balance (deduct payment amount)
+    const payerUpdateResponse = await fetch(`/api/companies/update-balance/${payerAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: -paymentAmount })
+    });
+
+    if (!payerUpdateResponse.ok) {
+      const errorData = await payerUpdateResponse.json();
+      console.error("Error updating payer's balance:", errorData.error);
+      return;
+    }
+
+    // Update payee's balance (add payment amount)
+    const payeeUpdateResponse = await fetch(`/api/companies/update-balance/${payeeAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: paymentAmount })
+    });
+
+    if (!payeeUpdateResponse.ok) {
+      const errorData = await payeeUpdateResponse.json();
+      console.error("Error updating payee's balance:", errorData.error);
+      return;
+    }
+
+    console.log("Payment successful");
+
+  } catch (error) {
+    console.error("An error occurred during the payment process:", error);
+  }
+});
