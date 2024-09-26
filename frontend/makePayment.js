@@ -10,8 +10,10 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
       return;
     }
 
-    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+    if (isNaN(paymentAmount) || paymentAmount <= 0) 
+      {
       console.error("Invalid payment amount");
+      
       return;
     }
 
