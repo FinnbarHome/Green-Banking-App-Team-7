@@ -42,7 +42,7 @@ router.get("/companies/name/:companyName", async (req, res) => {
       .collection("Companies")
       .findOne({ "Company Name": req.params.companyName });
     if (!company) {
-      return res.status(404).json({ error: "No company with that name exists." });
+      return res.status(404).json({ error: "Company not found" });
     }
     res.json(company);
   } catch (error) {
@@ -71,8 +71,6 @@ router.post("/login", async (req, res) => {
     handleError(res, error);
   }
 });
-
-
 
 // POST a new company
 router.post("/companies", async (req, res) => {
