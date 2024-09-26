@@ -75,21 +75,33 @@ router.post("/login", async (req, res) => {
 // POST a new company
 router.post("/companies", async (req, res) => {
   try {
-    const { "Account Number": accountNumber, "Company Name": companyName } = req.body;
+    const { "Company Name": companyName, Balance } = req.body;
+
+    if (!companyName || typeof Balance !== 'number') {
+      return res.status(400).json({ error: "Company Name and Balance are required." });
+    }
+
     // Check if the account number already exists
-    const existingAccount = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+    const existingAccount = await db.collection("Companies").findOne({ "Company Name": companyName });
     if (existingAccount) {
-      return res.status(400).json({ error: "A company with the same Account Number already exists" });
+      return res.status(400).json({ error: "A company with the same name already exists" });
     }
-    // Check if the company name already exists
-    const existingCompany = await db.collection("Companies").findOne({ "Company Name": companyName });
-    if (existingCompany) {
-      return res.status(400).json({ warning: "A company with the same name already exists" });
-    }
+
+    const newCompany = {
+      "Company Name": companyName,
+      "Spending Category": "User",
+      "Carbon Emissions": 0,
+      "Waste Management": 0,
+      "Sustainability Practises": 0,
+      "Balance": Balance,
+      "XP": 0,
+      "Summary": "",
+    };
+
     // Insert the new company if validations pass
-    const newCompany = await db.collection("Companies").insertOne(req.body);
-    console.log(newCompany);
-    res.status(201).json(newCompany);
+    const result = await db.collection("Companies").insertOne(newCompany);
+    console.log(result);
+    res.status(201).json(result.ops[0]);
   } catch (error) {
     handleError(res, error);
   }
