@@ -50,7 +50,6 @@ router.get("/companies/:companyName", async (req, res) => {
   }
 });
 
-
 // POST a new company
 router.post("/companies", async (req, res) => {
   try {
@@ -73,41 +72,6 @@ router.post("/companies", async (req, res) => {
     handleError(res, error);
   }
 });
-
-// PUT Add Balance field to all existing companies
-router.put("/companies/add-balance", async (req, res) => {
-  try {
-    const { Balance } = req.body;
-    // Check if the Balance field is provided
-    if (Balance === undefined) {
-      return res.status(400).json({ error: "Balance field is required" });
-    }
-    // Update all companies and add the 'Balance' field with the provided value
-    const result = await db.collection("Companies").updateMany({}, { $set: { Balance: Balance } });
-    console.log(result);
-    res.json({ msg: `Balance field added to ${result.matchedCount} companies` });
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
-// PUT Add XP field to all existing companies
-router.put("/companies/add-xp", async (req, res) => {
-  try {
-    const { XP } = req.body;
-    // Check if the XP field is provided and is a valid number
-    if (XP === undefined || isNaN(XP)) {
-      return res.status(400).json({ error: "A valid XP field is required" });
-    }
-    // Update all companies and add the 'XP' field with the provided value
-    const result = await db.collection("Companies").updateMany({}, { $set: { XP: parseInt(XP) } });
-    console.log(result);
-    res.json({ msg: `XP field added to ${result.matchedCount} companies` });
-  } catch (error) {
-    handleError(res, error);
-  }
-});
-
 
 // PUT Update the Balance for a specific company by Account Number (add/remove funds)
 router.put("/companies/update-balance/:accountNumber", async (req, res) => {
@@ -137,7 +101,6 @@ router.put("/companies/update-balance/:accountNumber", async (req, res) => {
   }
 });
 
-
 // PUT Update the XP for a specific company by Account Number (add/remove XP)
 router.put("/companies/update-xp/:accountNumber", async (req, res) => {
   try {
@@ -166,5 +129,45 @@ router.put("/companies/update-xp/:accountNumber", async (req, res) => {
   }
 });
 
+// GET Streak value for a specific company by Account Number
+router.get("/companies/:accountNumber/streak", async (req, res) => {
+  try {
+    const accountNumber = parseInt(req.params.accountNumber);
+    const company = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+    if (!company || company.Streak === undefined) {
+      return res.status(404).json({ error: "Streak not found for this company" });
+    }
+    res.json({ Streak: company.Streak });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// PUT Increment/Decrement the Streak for a specific company by Account Number
+router.put("/companies/update-streak/:accountNumber", async (req, res) => {
+  try {
+    const accountNumber = parseInt(req.params.accountNumber);
+    const { streakChange } = req.body; // Value by which to increment/decrement Streak
+    // Validate the streakChange input
+    if (streakChange === undefined || isNaN(streakChange)) {
+      return res.status(400).json({ error: "A valid streakChange value is required" });
+    }
+    // Find the company and update the Streak by incrementing/decrementing it
+    const updateResult = await db.collection("Companies").updateOne(
+      { "Account Number": accountNumber }, // Find the company by Account Number
+      { $inc: { Streak: streakChange } }   // Increment/decrement the Streak field
+    );
+    // If no company was found and updated, return a 404 error
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+    // Retrieve the updated document to send back as a response
+    const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+    res.json(updatedCompany); // Send the updated document in the response
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while updating the Streak" });
+  }
+});
 
 module.exports = router;
