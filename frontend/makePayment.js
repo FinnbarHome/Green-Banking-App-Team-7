@@ -54,6 +54,8 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     const greenThreshold = 0.7;
     const redThreshold = 0.3;
     const streakMultiplier = 0.1;
+    var redStreakMultiplier = 0;
+    var greenStreakMultiplier = 0;
 
     let isGreenTransaction = EIS > greenThreshold;
     let isRedTransaction = EIS < redThreshold;
@@ -70,13 +72,15 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     let redStreak = Math.abs(Math.min(0, streak));
 
     if (greenStreak % 5 === 0 && greenStreak > 0) {
-      EIS += (greenStreak / 5) * streakMultiplier;
+      greenStreakMultiplier = Math.floor(greenStreak / 5);
+      EIS += greenStreakMultiplier * streakMultiplier;
     }
 
-    if (redStreak % 5 === 0 && redStreak > 0) {
+    if (redStreak % 5 === 0 && redStreak > 0 || redStreak > 5) {
       let levelInfo = calculateUserLevel(userXP);
       let decreaseRed = levelInfo.level / 2;
-      EIS -= (redStreak / 5) * streakMultiplier * decreaseRed;
+      redStreakMultiplier = Math.floor(redStreak / 5);
+      EIS -= redStreakMultiplier * streakMultiplier * decreaseRed;
     }
 
     console.log(streak);
@@ -123,7 +127,7 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     const payerStreakUpdate = await fetch(`/api/companies/update-streak/${payerAccountNumber}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ streak: streak })
+      body: JSON.stringify({ streakValue: streak })
     });
 
     if (!payerStreakUpdate.ok) {
