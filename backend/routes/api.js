@@ -71,11 +71,9 @@ router.post("/companies", async (req, res) => {
     if (!companyName || typeof Balance !== 'number') {
       return res.status(400).json({ error: "Company Name and Balance are required." });
     }
-
     // Find the last company to assign the next account number
     const existingCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
     const accountNumber = existingCompany.length > 0 ? existingCompany[0]["Account Number"] + 1 : 1;
-
     // Prepare the new company document
     const newCompany = {
       "Company Name": companyName,
@@ -89,10 +87,8 @@ router.post("/companies", async (req, res) => {
       "XP": 0,
       "Streak": 0,
     };
-
     // Insert the new company
     const result = await db.collection("Companies").insertOne(newCompany);
-
     // Respond with the inserted document's details
     res.status(201).json({ _id: result.insertedId, ...newCompany });
   } catch (error) {
@@ -107,18 +103,14 @@ const updateField = async (accountNumber, field, value, res) => {
       { "Account Number": parseInt(accountNumber) }, // Ensure account number is parsed
       { $inc: { [field]: value } }
     );
-
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
-
     // Fetch the updated company after updating
     const updatedCompany = await db.collection("Companies").findOne({ "Account Number": parseInt(accountNumber) });
-
     if (!updatedCompany) {
       return res.status(404).json({ error: "Unable to retrieve updated company data" });
     }
-
     // Return the updated company object
     return res.json(updatedCompany);
   } catch (error) {
