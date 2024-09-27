@@ -14,11 +14,13 @@ const findCompany = async (accountNumber, res) => {
   try {
     const company = await db.collection("Companies").findOne({ "Account Number": parseInt(accountNumber) });
     if (!company) {
-      return res.status(404).json({ error: "Company not found" });
+      res.status(404).json({ error: "Company not found" });
+      return null;
     }
     return company;
   } catch (error) {
     handleError(res, error);
+    return null;
   }
 };
 
@@ -49,15 +51,6 @@ router.get("/companies/name/:companyName", async (req, res) => {
   }
 });
 
-// PUT update the Streak
-router.put("/companies/update-streak/:accountNumber", async (req, res) => {
-  const { streakChange } = req.body;
-  if (streakChange === undefined || isNaN(streakChange)) {
-    return res.status(400).json({ error: "A valid streakChange value is required" });
-  }
-  await updateField(req.params.accountNumber, "Streak", streakChange, res);
-});
-
 // POST login route
 router.post("/login", async (req, res) => {
   try {
@@ -80,9 +73,11 @@ router.post("/companies", async (req, res) => {
     if (!companyName || typeof Balance !== 'number') {
       return res.status(400).json({ error: "Company Name and Balance are required." });
     }
+
     // Find the last company to assign the next account number
     const existingCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
     const accountNumber = existingCompany.length > 0 ? existingCompany[0]["Account Number"] + 1 : 1;
+
     // Prepare the new company document
     const newCompany = {
       "Company Name": companyName,
@@ -96,8 +91,10 @@ router.post("/companies", async (req, res) => {
       "XP": 0,
       "Streak": 0,
     };
+
     // Insert the new company
     const result = await db.collection("Companies").insertOne(newCompany);
+
     // Respond with the inserted document's details
     res.status(201).json({ _id: result.insertedId, ...newCompany });
   } catch (error) {
@@ -109,24 +106,23 @@ router.post("/companies", async (req, res) => {
 const updateField = async (accountNumber, field, value, res) => {
   try {
     const updateResult = await db.collection("Companies").updateOne(
-      { "Account Number": parseInt(accountNumber) }, // Ensure account number is parsed
-      { $inc: { [field]: value } }
+      { "Account Number": parseInt(accountNumber) },
+      { $set: { [field]: value } } // Change from $inc to $set for direct field value setting
     );
+
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
+
     // Fetch the updated company after updating
-    const updatedCompany = await db.collection("Companies").findOne({ "Account Number": parseInt(accountNumber) });
-    if (!updatedCompany) {
-      return res.status(404).json({ error: "Unable to retrieve updated company data" });
+    const updatedCompany = await findCompany(accountNumber, res);
+    if (updatedCompany) {
+      return res.json(updatedCompany);
     }
-    // Return the updated company object
-    return res.json(updatedCompany);
   } catch (error) {
     handleError(res, error);
   }
 };
-
 
 // PUT update the Balance
 router.put("/companies/update-balance/:accountNumber", async (req, res) => {
@@ -149,17 +145,20 @@ router.put("/companies/update-xp/:accountNumber", async (req, res) => {
 // GET Streak for a specific company
 router.get("/companies/:accountNumber/streak", async (req, res) => {
   const company = await findCompany(req.params.accountNumber, res);
-  if (company && company.Streak !== undefined) res.json({ Streak: company.Streak });
-  else res.status(404).json({ error: "Streak not found for this company" });
+  if (company && company.Streak !== undefined) {
+    res.json({ Streak: company.Streak });
+  } else {
+    res.status(404).json({ error: "Streak not found for this company" });
+  }
 });
 
-// PUT update the Streak
+// PUT set the Streak value
 router.put("/companies/update-streak/:accountNumber", async (req, res) => {
-  const { streakChange } = req.body;
-  if (streakChange === undefined || isNaN(streakChange)) {
-    return res.status(400).json({ error: "A valid streakChange value is required" });
+  const { streakValue } = req.body;
+  if (streakValue === undefined || isNaN(streakValue)) {
+    return res.status(400).json({ error: "A valid streakValue is required" });
   }
-  await updateField(req.params.accountNumber, "Streak", streakChange, res);
+  await updateField(req.params.accountNumber, "Streak", streakValue, res);
 });
 
 module.exports = router;
