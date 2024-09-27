@@ -1,8 +1,12 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const helmet = require('helmet');
+const morgan = require('morgan');
+const compression = require('compression');
+const rateLimit = require('express-rate-limit');
 const connectDB = require('./config/db');
-const apiRoutes = require('./routes/api'); // Import API routes
+const apiRoutes = require('./routes/api');
 const discountsRoutes = require("./routes/discounts");
 const transactionsRoutes = require("./routes/transactions");
 const path = require('path');
@@ -11,7 +15,6 @@ const app = express();
 
 // Validate required environment variables
 const requiredEnvVars = ['PORT', 'MONGO_URI'];
-
 requiredEnvVars.forEach((key) => {
     if (!process.env[key]) {
         console.error(`ERROR: ${key} not specified in .env`);
@@ -19,9 +22,20 @@ requiredEnvVars.forEach((key) => {
     }
 });
 
-// Middleware for JSON and CORS
-app.use(express.json());
-app.use(cors());
+// Middleware for security and performance
+app.use(helmet()); // Adds secure HTTP headers
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse incoming JSON requests
+app.use(compression()); // Compress responses for better performance
+app.use(morgan('combined')); // HTTP request logger
+
+// Rate limiting to prevent abuse
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 100 requests per `windowMs`
+    message: "Too many requests, please try again later.",
+});
+app.use(limiter);
 
 // Serve static files from the frontend folder
 app.use(express.static(path.join(__dirname, '../frontend')));
@@ -42,9 +56,9 @@ connectDB()
     .catch((error) => {
         console.error("ERROR: Database connection failed", error);
         process.exit(1); // Terminate process if DB connection fails
-    });
+});
 
-// API routes (all under /api)
+// API routes
 app.use('/api', apiRoutes);
 app.use("/api", discountsRoutes);
 app.use("/api", transactionsRoutes);
