@@ -1,15 +1,26 @@
 const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
-
-// Assuming you have already connected to the CompanyDB database
 const db = mongoose.connection;
 
-// Error handling function
-function handleError(res, error) {
+// Utility function to handle errors
+const handleError = (res, error, status = 500, message = "An error occurred") => {
   console.error(error);
-  res.status(500).json({ error: error.message });
-}
+  res.status(status).json({ error: message });
+};
+
+// Utility function to find a discount by DiscountID
+const findDiscount = async (discountID, res) => {
+  try {
+    const discount = await db.collection("Discounts").findOne({ DiscountID: parseInt(discountID) });
+    if (!discount) {
+      return res.status(404).json({ error: "Discount not found" });
+    }
+    return discount;
+  } catch (error) {
+    handleError(res, error);
+  }
+};
 
 // GET all Discounts
 router.get("/discounts", async (req, res) => {
@@ -23,39 +34,27 @@ router.get("/discounts", async (req, res) => {
 
 // GET a specific discount by DiscountID
 router.get("/discounts/:discountID", async (req, res) => {
-  try {
-    const discountID = parseInt(req.params.discountID);
-    const discount = await db.collection("Discounts").findOne({ "DiscountID": discountID });
-    if (!discount) {
-      return res.status(404).json({ error: "Discount not found" });
-    }
-    res.json(discount);
-  } catch (error) {
-    handleError(res, error);
-  }
+  const discount = await findDiscount(req.params.discountID, res);
+  if (discount) res.json(discount);
 });
 
 // POST a new discount
 router.post("/discounts", async (req, res) => {
   try {
     const { DiscountID, Company, LevelReq, DiscountCode, Description } = req.body;
+
     // Check if the DiscountID already exists
     const existingDiscount = await db.collection("Discounts").findOne({ DiscountID });
     if (existingDiscount) {
       return res.status(400).json({ error: "A discount with the same DiscountID already exists" });
     }
+
     // Insert the new discount into the collection
     const newDiscount = { DiscountID, Company, LevelReq, DiscountCode, Description };
     const result = await db.collection("Discounts").insertOne(newDiscount);
+
     // Return the newly created discount
-    res.status(201).json({
-      _id: result.insertedId,
-      DiscountID,
-      Company,
-      LevelReq,
-      DiscountCode,
-      Description
-    });
+    res.status(201).json({ _id: result.insertedId, ...newDiscount });
   } catch (error) {
     handleError(res, error);
   }
@@ -65,11 +64,13 @@ router.post("/discounts", async (req, res) => {
 router.delete("/discounts/:discountID", async (req, res) => {
   try {
     const discountID = parseInt(req.params.discountID);
+
     // Find and delete the discount with the specified DiscountID
     const result = await db.collection("Discounts").deleteOne({ DiscountID: discountID });
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Discount not found" });
     }
+
     res.json({ message: `Discount with DiscountID ${discountID} deleted successfully` });
   } catch (error) {
     handleError(res, error);
