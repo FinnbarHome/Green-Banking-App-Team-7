@@ -26,7 +26,7 @@ requiredEnvVars.forEach((key) => {
 app.use(helmet()); // Adds secure HTTP headers
 app.use(cors()); // Enable CORS
 app.use(express.json()); // Parse incoming JSON requests
-app.use(compression()); // Compress responses for better performance
+app.use(compression()); // Compress responses
 app.use(morgan('combined')); // HTTP request logger
 
 // Rate limiting to prevent abuse
