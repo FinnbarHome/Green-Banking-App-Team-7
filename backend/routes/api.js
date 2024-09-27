@@ -49,15 +49,6 @@ router.get("/companies/name/:companyName", async (req, res) => {
   }
 });
 
-// PUT update the Streak
-router.put("/companies/update-streak/:accountNumber", async (req, res) => {
-  const { streakChange } = req.body;
-  if (streakChange === undefined || isNaN(streakChange)) {
-    return res.status(400).json({ error: "A valid streakChange value is required" });
-  }
-  await updateField(req.params.accountNumber, "Streak", streakChange, res);
-});
-
 // POST login route
 router.post("/login", async (req, res) => {
   try {
@@ -153,13 +144,33 @@ router.get("/companies/:accountNumber/streak", async (req, res) => {
   else res.status(404).json({ error: "Streak not found for this company" });
 });
 
-// PUT update the Streak
+// PUT set the Streak value
 router.put("/companies/update-streak/:accountNumber", async (req, res) => {
-  const { streakChange } = req.body;
-  if (streakChange === undefined || isNaN(streakChange)) {
-    return res.status(400).json({ error: "A valid streakChange value is required" });
+  const { streakValue } = req.body;
+  // Validate the streakValue input
+  if (streakValue === undefined || isNaN(streakValue)) {
+    return res.status(400).json({ error: "A valid streakValue is required" });
   }
-  await updateField(req.params.accountNumber, "Streak", streakChange, res);
+  try {
+    const accountNumber = parseInt(req.params.accountNumber);
+    // Update the Streak by setting its value
+    const updateResult = await db.collection("Companies").updateOne(
+      { "Account Number": accountNumber }, // Find the company by Account Number
+      { $set: { Streak: streakValue } } // Set the new Streak value
+    );
+    // If no company was found and updated, return a 404 error
+    if (updateResult.matchedCount === 0) {
+      return res.status(404).json({ error: "Company not found" });
+    }
+    // Retrieve the updated document to send back as a response
+    const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+    // Return the updated company with the new Streak
+    res.json(updatedCompany);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "An error occurred while updating the Streak" });
+  }
 });
+
 
 module.exports = router;
