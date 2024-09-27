@@ -49,6 +49,15 @@ router.get("/companies/name/:companyName", async (req, res) => {
   }
 });
 
+// PUT update the Streak
+router.put("/companies/update-streak/:accountNumber", async (req, res) => {
+  const { streakChange } = req.body;
+  if (streakChange === undefined || isNaN(streakChange)) {
+    return res.status(400).json({ error: "A valid streakChange value is required" });
+  }
+  await updateField(req.params.accountNumber, "Streak", streakChange, res);
+});
+
 // POST login route
 router.post("/login", async (req, res) => {
   try {
