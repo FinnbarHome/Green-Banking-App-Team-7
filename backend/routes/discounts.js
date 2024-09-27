@@ -47,7 +47,30 @@ router.post("/discounts", async (req, res) => {
     // Insert the new discount into the collection
     const newDiscount = { DiscountID, Company, LevelReq, DiscountCode, Description };
     const result = await db.collection("Discounts").insertOne(newDiscount);
-    res.status(201).json(result.ops[0]); // Return the newly created discount
+    // Return the newly created discount
+    res.status(201).json({
+      _id: result.insertedId,
+      DiscountID,
+      Company,
+      LevelReq,
+      DiscountCode,
+      Description
+    });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
+// DELETE a discount by DiscountID
+router.delete("/discounts/:discountID", async (req, res) => {
+  try {
+    const discountID = parseInt(req.params.discountID);
+    // Find and delete the discount with the specified DiscountID
+    const result = await db.collection("Discounts").deleteOne({ DiscountID: discountID });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: "Discount not found" });
+    }
+    res.json({ message: `Discount with DiscountID ${discountID} deleted successfully` });
   } catch (error) {
     handleError(res, error);
   }

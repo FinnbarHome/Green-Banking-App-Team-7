@@ -4,7 +4,9 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 const apiRoutes = require('./routes/api'); // Import API routes
 const discountsRoutes = require("./routes/discounts"); 
-const path = require('path'); // Add this line
+const transactionsRoutes = require("./routes/transactions"); 
+const path = require('path'); 
+
 
 const app = express();
 
@@ -42,6 +44,7 @@ connectDB()
 // API routes
 app.use('/api', apiRoutes);
 app.use("/api", discountsRoutes);
+app.use("/api", transactionsRoutes);
 
 // Root endpoint for basic health check
 app.get('/', (req, res) => {
