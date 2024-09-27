@@ -35,8 +35,8 @@ router.get("/companies/:accountNumber", async (req, res) => {
   }
 });
 
-// GET a specific company by account name
-router.get("/companies/:companyName", async (req, res) => {
+// GET a specific company by Account Name
+router.get("/companies/name/:companyName", async (req, res) => {
   try {
     const company = await db
       .collection("Companies")
@@ -50,24 +50,56 @@ router.get("/companies/:companyName", async (req, res) => {
   }
 });
 
+// POST login route
+router.post("/login", async (req, res) => {
+  try {
+    const { username, accountNumber } = req.body;
+
+    // Find a company by username and account number
+    const company = await db.collection("Companies").findOne({
+      "Company Name": username,
+      "Account Number": parseInt(accountNumber)
+    });
+
+    if (!company) {
+      return res.status(404).json({ error: "Company not found or account number does not match" });
+    }
+
+    // Return the account number of the company as part of the login process
+    res.json({ accountNumber: company["Account Number"] });
+  } catch (error) {
+    handleError(res, error);
+  }
+});
+
 // POST a new company
 router.post("/companies", async (req, res) => {
   try {
-    const { "Account Number": accountNumber, "Company Name": companyName } = req.body;
-    // Check if the account number already exists
-    const existingAccount = await db.collection("Companies").findOne({ "Account Number": accountNumber });
-    if (existingAccount) {
-      return res.status(400).json({ error: "A company with the same Account Number already exists" });
+    const { "Company Name": companyName, Balance } = req.body;
+
+    if (!companyName || typeof Balance !== 'number') {
+      return res.status(400).json({ error: "Company Name and Balance are required." });
     }
-    // Check if the company name already exists
-    const existingCompany = await db.collection("Companies").findOne({ "Company Name": companyName });
-    if (existingCompany) {
-      return res.status(400).json({ warning: "A company with the same name already exists" });
-    }
+
+    const existingCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
+    const accountNumber = existingCompany.length > 0 ? existingCompany[0]["Account Number"] + 1 : 1;
+
+    const newCompany = {
+      "Company Name": companyName,
+      "Spending Category": "User",
+      "Carbon Emissions": 0,
+      "Waste Management": 0,
+      "Sustainability Practises": 0,
+      "Account Number": accountNumber,
+      "Balance": Balance,
+      "XP": 0,
+      "Summary": "",
+    };
+
     // Insert the new company if validations pass
-    const newCompany = await db.collection("Companies").insertOne(req.body);
-    console.log(newCompany);
-    res.status(201).json(newCompany);
+    const result = await db.collection("Companies").insertOne(newCompany);
+    console.log(result);
+    res.status(201).json(result.ops[0]);
   } catch (error) {
     handleError(res, error);
   }
