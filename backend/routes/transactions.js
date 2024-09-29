@@ -67,19 +67,15 @@ router.get("/transactions", async (req, res) => {
 // GET View transactions by recipient or sender
 router.get("/transactions/:accountNumber", async (req, res) => {
   console.log("GET /transactions/acc hit"); // Add this debug line
-
   try {
     const accountNumber = parseInt(req.params.accountNumber);
-
     // Fetch transactions where the account number is either the recipient or sender
     const transactions = await db.collection("Transactions").find({
       $or: [{ Recipient: accountNumber }, { Sender: accountNumber }]
     }).toArray();
-
     if (transactions.length === 0) {
       return res.status(404).json({ error: "No transactions found for this account number" });
     }
-
     res.json(transactions);
   } catch (error) {
     handleError(res, error);
