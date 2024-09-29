@@ -200,4 +200,42 @@ router.put("/companies/update-streak/:accountNumber", async (req, res) => {
   await updateField(req.params.accountNumber, "Streak", streakValue, res);
 });
 
+// POST a new Transaction
+router.post("/transactions", async (req, res) => {
+  try {
+    const { Recipient, Sender, Amount, Reference } = req.body;
+
+    // Validate the request body
+    if (!Recipient || !Sender || !Amount || !Reference) {
+      return res.status(400).json({ error: "All fields are required" });
+    }
+
+    // Validate that Amount is a positive number
+    if (typeof Amount !== "number" || Amount <= 0) {
+      return res.status(400).json({ error: "Amount must be a positive number" });
+    }
+
+    // Create a new transaction object
+    const newTransaction = {
+      Recipient,
+      Sender,
+      Amount,
+      Reference,
+      date: new Date() // Add a timestamp
+    };
+
+    // Insert the new transaction into the database
+    const result = await db.collection("Transactions").insertOne(newTransaction);
+
+    res.status(201).json({
+      message: "Transaction created successfully",
+      transactionId: result.insertedId
+    });
+  } catch (error) {
+    console.error("Error posting transaction:", error);
+    res.status(500).json({ error: "Failed to create transaction" });
+  }
+});
+
+
 module.exports = router;
