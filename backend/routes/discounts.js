@@ -38,24 +38,38 @@ router.get("/discounts/:discountID", async (req, res) => {
   if (discount) res.json(discount);
 });
 
-// POST a new discount
 router.post("/discounts", async (req, res) => {
   try {
-    const { DiscountID, Company, LevelReq, DiscountCode, Description } = req.body;
-    // Check if the DiscountID already exists
-    const existingDiscount = await db.collection("Discounts").findOne({ DiscountID });
-    if (existingDiscount) {
-      return res.status(400).json({ error: "A discount with the same DiscountID already exists" });
-    }
-    // Insert the new discount into the collection
-    const newDiscount = { DiscountID, Company, LevelReq, DiscountCode, Description };
-    const result = await db.collection("Discounts").insertOne(newDiscount);
-    // Return the newly created discount
-    res.status(201).json({ _id: result.insertedId, ...newDiscount });
+      const { DiscountID, Company, LevelReq, DiscountCode, Description } = req.body;
+
+      // Convert DiscountID and LevelReq to integers if necessary
+      const discountIDInt = parseInt(DiscountID);
+      const levelReqInt = parseInt(LevelReq);
+
+      // Check if the DiscountID already exists
+      const existingDiscount = await db.collection("Discounts").findOne({ DiscountID: discountIDInt });
+      if (existingDiscount) {
+          return res.status(400).json({ error: "A discount with the same DiscountID already exists" });
+      }
+
+      // Insert the new discount into the collection
+      const newDiscount = {
+          DiscountID: discountIDInt,
+          Company,
+          LevelReq: levelReqInt,
+          DiscountCode,
+          Description
+      };
+
+      const result = await db.collection("Discounts").insertOne(newDiscount);
+
+      // Return the newly created discount
+      res.status(201).json({ _id: result.insertedId, ...newDiscount });
   } catch (error) {
-    handleError(res, error);
+      handleError(res, error);
   }
 });
+
 
 // DELETE a discount by DiscountID
 router.delete("/discounts/:discountID", async (req, res) => {
