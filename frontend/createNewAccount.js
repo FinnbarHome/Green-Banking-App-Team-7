@@ -1,3 +1,5 @@
+document.getElementById("signupButton").addEventListener("click", CreateNewAccount);
+
 async function CreateNewAccount() {
     const companyName = document.getElementById("username").value;
     const balance = parseFloat(document.getElementById("balance").value);
@@ -23,14 +25,12 @@ async function CreateNewAccount() {
       const result = await response.json();
       if (response.ok) {
         alert("Account created successfully!");
-        // Optionally redirect to the login page or home page
         window.location.href = 'login.html'; // Redirect to login page
       } else {
-        // Handle errors from the API
         alert(result.error || result.warning);
       }
     } catch (error) {
       console.error("Error creating account:", error);
       alert("An error occurred while creating the account. Please try again.");
     }
-  }
+}
