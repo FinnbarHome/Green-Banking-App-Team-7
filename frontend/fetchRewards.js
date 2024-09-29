@@ -1,20 +1,38 @@
 async function fetchRewardsData() {
     try {
-      // Simulating fetching user level and XP from the server/local storage
-      const userLevel = 10; // This should be fetched dynamically from user's data
-      const username = "John Doe"; // This should be fetched dynamically from user's data
-      const xp = 1200; // This should be fetched dynamically from user's data
+      // Manually set the user's green level
+      const userLevel = 10; // Manually set the green level
+      document.getElementById('greenLevel').textContent = userLevel; // Set the green level in the UI
   
-      // Display user info on the page
-      document.getElementById('username').textContent = username;
-      document.getElementById('greenLevel').textContent = userLevel;
-      document.getElementById('xp').textContent = xp;
+      // Get account number from localStorage
+      const accountNumber = localStorage.getItem('accountNumber');
+  
+      if (!accountNumber) {
+        console.error('No account number found in localStorage.');
+        return;
+      }
+  
+      // Fetch the company data using the account number
+      const response = await fetch(`/api/companies/${accountNumber}`);
+      const companyData = await response.json();
+  
+      if (!response.ok) {
+        console.error("Error fetching company data:", companyData.error);
+        return;
+      }
+  
+      // Extract user data from the response
+      const { "Company Name": companyName, XP: userXP } = companyData;
+  
+      // Display user information in the HTML
+      document.getElementById('username').textContent = companyName;
+      document.getElementById('xp').textContent = userXP;
   
       // Fetching discounts from the backend
-      const response = await fetch('/api/discounts');
-      const discounts = await response.json();
+      const discountResponse = await fetch('/api/discounts');
+      const discounts = await discountResponse.json();
   
-      // Filtering discounts based on user's level
+      // Filtering discounts based on manually set userLevel
       const eligibleDiscounts = discounts.filter(discount => userLevel >= discount.LevelReq);
   
       const rewardsContainer = document.getElementById('rewardsContainer');
