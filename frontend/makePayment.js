@@ -5,6 +5,7 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
   try {
     var paymentAmount = parseFloat(document.getElementById("payment-amount").value);
     var payeeName = document.getElementById("payee-name").value;
+    var paymentReference = document.getElementById("payment-reference").value;
 
     if (!payeeName) {
       throw new Error("Payee name is required");
@@ -110,6 +111,19 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
       const errorData = await payeeUpdateResponse.json();
       throw new Error(`Error updating payee's balance: ${errorData.error}`);
     }
+
+    const transactionData = {
+      Recipient: payeeAccountNumber,
+      Sender: payerAccountNumber,
+      Amount: paymentAmount,
+      Reference: paymentReference
+    };
+
+    const transactionResponse = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(transactionData)
+    });
 
     // Update XP for the payer
     const payerXPUpdate = await fetch(`/api/companies/update-xp/${payerAccountNumber}`, {
