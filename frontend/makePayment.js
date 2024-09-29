@@ -36,10 +36,12 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     let EIS = (CE + WM + SP) / 30;
 
     // Get payer's account number from localStorage
-    const payerAccountNumber = localStorage.getItem('accountNumber');
+    let payerAccountNumber = localStorage.getItem('accountNumber');
     if (!payerAccountNumber) {
       throw new Error("Payer account number not found in localStorage");
     }
+
+    payerAccountNumber = parseInt(payerAccountNumber);
 
     // Fetch payer's account data
     const payerResponse = await fetch(`/api/companies/${payerAccountNumber}`);
