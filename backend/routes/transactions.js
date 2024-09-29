@@ -64,22 +64,27 @@ router.get("/transactions", async (req, res) => {
   }
 });
 
-// GET View transactions by recipient or sender
+// GET View transactions by recipient or sender, sorted by date (newest first)
 router.get("/transactions/:accountNumber", async (req, res) => {
-  console.log("GET /transactions/acc hit"); // Add this debug line
+  console.log("GET /transactions/acc hit");
+
   try {
     const accountNumber = parseInt(req.params.accountNumber);
-    // Fetch transactions where the account number is either the recipient or sender
+
+    // Fetch transactions where the account number is either the recipient or sender, sorted by date
     const transactions = await db.collection("Transactions").find({
       $or: [{ Recipient: accountNumber }, { Sender: accountNumber }]
-    }).toArray();
+    }).sort({ date: -1 }).toArray();  // Sort by date (descending)
+
     if (transactions.length === 0) {
       return res.status(404).json({ error: "No transactions found for this account number" });
     }
+
     res.json(transactions);
   } catch (error) {
     handleError(res, error);
   }
 });
+
 
 module.exports = router;
