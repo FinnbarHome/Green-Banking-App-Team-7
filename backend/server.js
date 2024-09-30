@@ -10,6 +10,7 @@ const apiRoutes = require('./routes/api');
 const discountsRoutes = require("./routes/discounts");
 const transactionsRoutes = require("./routes/transactions");
 const path = require('path');
+const { setupWebSocket } = require('./websocket'); // Import the WebSocket setup function
 
 const app = express();
 
@@ -48,15 +49,14 @@ connectDB()
             console.log(`API server listening on port ${PORT}!`);
         });
 
-        // Handle graceful shutdown on termination signals
-        ['SIGTERM', 'SIGINT'].forEach((signal) => {
-            process.on(signal, () => gracefulShutdown(signal, server));
-        });
+        // Initialize WebSocket server
+        setupWebSocket(server); // Use the WebSocket setup function
     })
     .catch((error) => {
         console.error("ERROR: Database connection failed", error);
-        process.exit(1); // Terminate process if DB connection fails
-});
+        process.exit(1);
+    });
+
 
 // API routes
 app.use('/api', apiRoutes);

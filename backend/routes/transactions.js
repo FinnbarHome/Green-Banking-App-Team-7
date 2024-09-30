@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const db = mongoose.connection;
+const { notifyClient } = require('../websocket'); // Import WebSocket notification utility from websocket.js
 
 // Utility function to handle errors
 const handleError = (res, error, status = 500, message = "An error occurred") => {
@@ -28,26 +29,32 @@ const validateAccounts = async (Recipient, Sender, res) => {
 // POST Create a new transaction (with date field)
 router.post("/transactions", async (req, res) => {
   try {
-    const { Recipient, Sender, Amount, Reference } = req.body;
-    // Validation
-    if (!Recipient || !Sender || !Amount || !Reference) {
-      return res.status(400).json({ error: "Recipient, Sender, Amount, and Reference are required" });
-    }
-    // Validate if both accounts exist
-    await validateAccounts(Recipient, Sender, res);
-    // Insert the new transaction with the current date
-    const newTransaction = {
-      Recipient,
-      Sender,
-      Amount,
-      Reference,
-      date: new Date() // Set the current date
-    };
-    const result = await db.collection("Transactions").insertOne(newTransaction);
-    // Return the newly created transaction
-    res.status(201).json({ _id: result.insertedId, ...newTransaction });
+      const { Recipient, Sender, Amount, Reference } = req.body;
+
+      if (!Recipient || !Sender || !Amount || !Reference) {
+          return res.status(400).json({ error: "Recipient, Sender, Amount, and Reference are required" });
+      }
+
+      // Validate if both accounts exist
+      await validateAccounts(Recipient, Sender, res);
+
+      const newTransaction = {
+          Recipient,
+          Sender,
+          Amount,
+          Reference,
+          date: new Date() // Set the current date
+      };
+
+      const result = await db.collection("Transactions").insertOne(newTransaction);
+
+      // Notify both sender and recipient about the new transaction
+      notifyClient(Sender, 'transactionUpdate', { transaction: newTransaction });
+      notifyClient(Recipient, 'transactionUpdate', { transaction: newTransaction });
+
+      res.status(201).json({ _id: result.insertedId, ...newTransaction });
   } catch (error) {
-    handleError(res, error);
+      handleError(res, error);
   }
 });
 

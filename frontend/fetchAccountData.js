@@ -1,15 +1,56 @@
+let ws;
+
+// Initialize WebSocket connection
+function initializeWebSocket(accountNumber) {
+    ws = new WebSocket(`ws://${window.location.host}`); // Adjust this based on your WebSocket server URL
+
+    ws.onopen = () => {
+        console.log("WebSocket connection opened");
+
+        // Register the account number with the WebSocket connection
+        ws.send(JSON.stringify({ type: 'register', accountNumber }));
+    };
+
+    ws.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+
+        // Handle transaction updates
+        if (message.type === 'transactionUpdate') {
+            console.log("Received transaction update:", message.data);
+            fetchAccountData(); // Refresh account data
+        }
+    };
+
+    ws.onclose = () => {
+        console.log("WebSocket connection closed");
+    };
+
+    ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+    };
+}
+
+
+// Fetch account data and initialize WebSocket connection
 async function fetchAccountData() {
     try {
         const accountNumber = localStorage.getItem('accountNumber');
         if (!accountNumber) throw new Error("No account number found in localStorage.");
+
         const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
         if (!companyData) return;
+
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
             Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
             Level: `XP: ${companyData['XP']}`
         });
+
         await fetchTransactionHistory(accountNumber);
+
+        // Initialize WebSocket connection
+        initializeWebSocket(accountNumber);
+
     } catch (error) {
         console.error('Error fetching account data:', error);
     }
