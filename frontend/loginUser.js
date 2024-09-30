@@ -1,45 +1,66 @@
-document.getElementById("loginButton").addEventListener("click", async () => {
+document.getElementById("loginButton").addEventListener("click", handleLogin);
+
+async function handleLogin() {
   const username = document.getElementById("username").value;
   const accountNumber = document.getElementById("accountNumber").value;
   const errorMessage = document.getElementById("errorMessage");
 
-  // Clear previous error messages
-  errorMessage.textContent = "";
+  clearErrorMessage(errorMessage);
 
-  // Check if both username and account number are entered
-  if (!username) {
-    errorMessage.textContent = "Please enter a username.";
-    return;
-  }
-
-  if (!accountNumber) {
-    errorMessage.textContent = "Please enter an Account Number.";
-    return;
-  }
+  // Validate inputs
+  if (!validateLoginInputs(username, accountNumber, errorMessage)) return;
 
   try {
-    // Make the POST request to the login API with both username and accountNumber
-    const response = await fetch('/api/login', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ username: username, accountNumber: accountNumber }) // Send both fields
-    });
+    // Make the login request
+    const response = await sendLoginRequest(username, accountNumber);
 
-    const data = await response.json();
-
-    // If login is successful, store account number and redirect to another page
     if (response.ok) {
-      localStorage.setItem('accountNumber', data.accountNumber); // Store account number in localStorage
-      console.log("Stored account number: ", data.accountNumber);
-      window.location.href = `home.html`; // Redirect to another page
+      // On success, store account number and redirect
+      localStorage.setItem('accountNumber', response.data.accountNumber);
+      window.location.href = 'home.html';
     } else {
-      // Show error message if login fails
-      errorMessage.textContent = data.error || "Login failed. Please check your username and account number.";
+      // Display error message on failure
+      displayErrorMessage(errorMessage, response.data.error || "Login failed. Please check your username and account number.");
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    errorMessage.textContent = "An error occurred during login. Please try again.";
+    displayErrorMessage(errorMessage, "An error occurred during login. Please try again.");
   }
-});
+}
+
+// Helper function to clear error messages
+function clearErrorMessage(errorMessageElement) {
+  errorMessageElement.textContent = "";
+}
+
+// Helper function to validate login inputs
+function validateLoginInputs(username, accountNumber, errorMessageElement) {
+  if (!username) {
+    displayErrorMessage(errorMessageElement, "Please enter a username.");
+    return false;
+  }
+  if (!accountNumber) {
+    displayErrorMessage(errorMessageElement, "Please enter an Account Number.");
+    return false;
+  }
+  return true;
+}
+
+// Helper function to display error messages
+function displayErrorMessage(errorMessageElement, message) {
+  errorMessageElement.textContent = message;
+}
+
+// Helper function to send login request
+async function sendLoginRequest(username, accountNumber) {
+  const response = await fetch('/api/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ username, accountNumber })
+  });
+
+  const data = await response.json();
+  return { ok: response.ok, data };
+}
