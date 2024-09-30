@@ -24,6 +24,29 @@ function createDiscountElement(discount) {
     return discountElement;
 }
 
+// Function to get the largest DiscountID from existing discounts
+async function getNextDiscountID() {
+    try {
+        const response = await fetch('/api/discounts', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        const discounts = await response.json();
+        if (discounts.length === 0) {
+            return 1; // Start at 1 if there are no discounts
+        }
+
+        const maxDiscountID = Math.max(...discounts.map(discount => discount.DiscountID));
+        return maxDiscountID + 1;
+    } catch (error) {
+        console.error("Error fetching discounts for ID generation:", error);
+        return 1; // Fallback in case of error
+    }
+}
+
 // Fetch all discounts and display them on the page with consistent styling
 async function fetchDiscounts() {
     try {
@@ -57,7 +80,6 @@ async function fetchDiscounts() {
 // Function to create a new discount
 async function createDiscount() {
     const companyName = document.getElementById("company").value;
-    const discountID = document.getElementById("discountID").value;
     const reqLevel = document.getElementById("levelRequirement").value;
     const discountCode = document.getElementById("discountCode").value;
     const description = document.getElementById("description").value;
@@ -66,11 +88,14 @@ async function createDiscount() {
     errorTag.textContent = "";
 
     // Validate all input fields
-    if (companyName === "" || discountID === "" || reqLevel === "" || discountCode === "" || description === "") {
+    if (companyName === "" || reqLevel === "" || discountCode === "" || description === "") {
         errorTag.classList = "text-red-400 text-center font-bold";
         errorTag.textContent = "You must fill out all the fields.";
         return;
     }
+
+    // Get the next DiscountID
+    const discountID = await getNextDiscountID();
 
     try {
         const response = await fetch('/api/discounts', {
@@ -79,7 +104,7 @@ async function createDiscount() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                DiscountID: parseInt(discountID),
+                DiscountID: discountID,
                 Company: companyName,
                 LevelReq: parseInt(reqLevel),
                 DiscountCode: discountCode,
