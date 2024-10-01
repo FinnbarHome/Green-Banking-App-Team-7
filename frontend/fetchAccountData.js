@@ -6,12 +6,14 @@ async function fetchAccountData() {
         if (!companyData) return;
         const XP = companyData['XP'];
         const levelInfo = calculateUserLevel(XP);
+
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
             Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
             Level: `Level: ${levelInfo.level}`,
             XP: `XP: ${XP}`
         });
+
         await fetchTransactionHistory(accountNumber);
     } catch (error) {
         console.error('Error fetching account data:', error);
@@ -22,6 +24,7 @@ async function fetchTransactionHistory(accountNumber) {
     try {
         const transactions = await fetchData(`/api/transactions/${accountNumber}`, "transactions");
         if (!transactions) return;
+
         clearAndInsertHTML('pastPayments', transactionHeaderHTML());
         const companyCache = {};
         for (const transaction of transactions) {
@@ -71,13 +74,15 @@ const transactionHeaderHTML = () => `
 // Insert transaction element into the DOM
 function insertTransactionElement(isOutgoing, amount, transactionDate, companyName, bgColor) {
     const transactionHTML = `
-        <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">${companyName}</h2>
-            <h2 class="col-span-1 text-xl text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
-                ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
-            </h2>
-            <h2 class="col-span-1 text-sm text-gray-400 text-right">${transactionDate}</h2>
-        </div>`;
+        <a href="analysis.html?companyName=${encodeURIComponent(companyName)}">
+            <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">${companyName}</h2>
+                <h2 class="col-span-1 text-xl text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
+                    ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
+                </h2>
+                <h2 class="col-span-1 text-sm text-gray-400 text-right">${transactionDate}</h2>
+            </div>
+        </a>`;
     document.getElementById('pastPayments').insertAdjacentHTML('beforeend', transactionHTML);
 }
 
