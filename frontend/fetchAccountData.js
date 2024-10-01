@@ -13,13 +13,22 @@ function initializeWebSocket(accountNumber) {
 
     ws.onmessage = (event) => {
         const message = JSON.parse(event.data);
-
+    
         // Handle transaction updates
         if (message.type === 'transactionUpdate') {
             console.log("Received transaction update:", message.data);
-            fetchAccountData(); // Refresh account data
+    
+            // Update the DOM with the new balance and XP from the message
+            updateDOM({
+                Balance: `Balance: £${message.data.updatedBalance.toFixed(2)}`,
+                XP: `XP: ${message.data.updatedXP}`
+            });
+    
+            // Refresh the transaction history as well
+            fetchTransactionHistory(localStorage.getItem('accountNumber'));
         }
     };
+    
 
     ws.onclose = () => {
         console.log("WebSocket connection closed");

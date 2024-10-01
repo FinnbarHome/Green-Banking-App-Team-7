@@ -29,32 +29,50 @@ const validateAccounts = async (Recipient, Sender, res) => {
 // POST Create a new transaction (with date field)
 router.post("/transactions", async (req, res) => {
   try {
-      const { Recipient, Sender, Amount, Reference } = req.body;
+    const { Recipient, Sender, Amount, Reference } = req.body;
 
-      if (!Recipient || !Sender || !Amount || !Reference) {
-          return res.status(400).json({ error: "Recipient, Sender, Amount, and Reference are required" });
-      }
+    if (!Recipient || !Sender || !Amount || !Reference) {
+      return res.status(400).json({ error: "Recipient, Sender, Amount, and Reference are required" });
+    }
 
-      // Validate if both accounts exist
-      await validateAccounts(Recipient, Sender, res);
+    // Validate if both accounts exist
+    await validateAccounts(Recipient, Sender, res);
 
-      const newTransaction = {
-          Recipient,
-          Sender,
-          Amount,
-          Reference,
-          date: new Date() // Set the current date
-      };
+    const newTransaction = {
+      Recipient,
+      Sender,
+      Amount,
+      Reference,
+      date: new Date() // Set the current date
+    };
 
-      const result = await db.collection("Transactions").insertOne(newTransaction);
+    // Insert the new transaction into the database
+    const result = await db.collection("Transactions").insertOne(newTransaction);
 
-      // Notify both sender and recipient about the new transaction
-      notifyClient(Sender, 'transactionUpdate', { transaction: newTransaction });
-      notifyClient(Recipient, 'transactionUpdate', { transaction: newTransaction });
+    // Update the balance of the sender and recipient
+    await db.collection("Companies").updateOne({ "Account Number": Sender }, { $inc: { Balance: -Amount } });
+    await db.collection("Companies").updateOne({ "Account Number": Recipient }, { $inc: { Balance: Amount } });
 
-      res.status(201).json({ _id: result.insertedId, ...newTransaction });
+    // Get the updated balances and XP
+    const updatedSender = await db.collection("Companies").findOne({ "Account Number": Sender });
+    const updatedRecipient = await db.collection("Companies").findOne({ "Account Number": Recipient });
+
+    // Notify the sender and recipient with updated data
+    notifyClient(Sender, 'transactionUpdate', {
+      transaction: newTransaction,
+      updatedBalance: updatedSender.Balance,
+      updatedXP: updatedSender.XP
+    });
+    notifyClient(Recipient, 'transactionUpdate', {
+      transaction: newTransaction,
+      updatedBalance: updatedRecipient.Balance,
+      updatedXP: updatedRecipient.XP
+    });
+
+    // Respond with the created transaction
+    res.status(201).json({ _id: result.insertedId, ...newTransaction });
   } catch (error) {
-      handleError(res, error);
+    handleError(res, error);
   }
 });
 
