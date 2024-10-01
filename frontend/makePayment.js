@@ -23,12 +23,22 @@ async function handlePayment(event) {
 
     await updateUserXPAndStreak(payerAccountNumber, streak, updatedEIS, paymentAmount);
 
-    await updatePayerUI(payerAccountNumber);
+    // Calculate XP gain for confirmation
+    const XPGain = Math.round(updatedEIS * paymentAmount);
+
+    // Display confirmation with dynamic values
+
+    // Calculate progress percentage for the progress bar
+    const levelInfo = calculateUserLevel(payerData["XP"]);
+    DisplayConfirmation(payeeName, paymentAmount, XPGain, streak, levelInfo["level"]);
+    const progressPercentage = Math.round((payerData["XP"] / levelInfo.nextLevelXP) * 100);
+    document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
 
   } catch (error) {
     console.error("An error occurred during the payment process:", error);
   }
 }
+
 
 // Helper functions
 
@@ -194,3 +204,44 @@ function Levels() {
   }
   return levelBounds;
 }
+
+
+function DisplayConfirmation(payeeName, paymentAmount, xpGained, streak, level) {
+  document.getElementById("paymentElements").innerHTML = `
+    <h1 class="text-3xl text-green-400 font-bold text-white mt-5 text-center">Payment Successful!</h1>
+    <h2 class="text-xl font-bold text-white text-center py-2 pb-5">Your payment to: <span class="text-green-400">${payeeName}</span></h2>
+    <div class ="border-green-800 border-2 py-5 border-x-0">
+      <div class="grid grid-flow-col gap-1 mb-2">
+        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You spent...</h2>
+        <h2 id="paymentAmount" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">£${paymentAmount.toFixed(2)}</h2>
+      </div>
+      <div class="grid grid-flow-col gap-1 mb-2">
+        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You gained...</h2>
+        <h2 id="xp" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">${xpGained} XP</h2>
+      </div>
+      <div class="grid grid-flow-col gap-1 mb-2">
+        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your streak is...</h2>
+        <h2 id="Streak" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">${streak}</h2>
+      </div>
+      <div class="grid grid-flow-col gap-1 mb-2">
+        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your level is...</h2>
+        <h2 id="Level" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">${level}</h2>
+      </div>
+      <div class="border-2 border-x-0 border-green-800 pb-5 border-t-0">
+        <h2 class="text-xl mt-3 font-bold text-center text-white mb-3 ">Your progress to the next green level:</h2>
+        <div class="w-full h-6 mt-2 rounded-full bg-green-900">
+          <div id="progress-bar" class="h-6 bg-green-600 rounded-full" style="width: 0%"></div>
+        </div>
+      </div>
+      <div class="flex justify-center space-x-4">
+        <button id="HomeButton" class="bg-green-700 text-white font-bold py-2 px-4 rounded mx-2 my-5">Back to Account Screen</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("HomeButton").addEventListener("click", () => {
+    window.location.href = 'home.html';
+  });
+
+}
+
