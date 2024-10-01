@@ -4,11 +4,14 @@ async function fetchAccountData() {
         if (!accountNumber) throw new Error("No account number found in localStorage.");
         const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
         if (!companyData) return;
+        const XP = companyData['XP'];
+        const levelInfo = calculateUserLevel(XP);
 
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
             Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
-            Level: `XP: ${companyData['XP']}`
+            Level: `Level: ${levelInfo.level}`,
+            XP: `XP: ${XP}`
         });
 
         await fetchTransactionHistory(accountNumber);
@@ -107,5 +110,57 @@ function getBgColor(companyData) {
     return combinedScore < 9 ? 'bg-red-900' :
            combinedScore <= 21 ? 'bg-orange-900' : 'bg-green-900';
 }
+
+function Levels() {
+    const power = 2.5;
+    const denominator = 0.3;
+    const levelBounds = [];
+  
+    for (let i = 0; i < 11; i++) {
+      let bounds = i / denominator;
+      bounds = Math.pow(bounds, power);
+      levelBounds[i] = Math.round(bounds);
+    }
+    return levelBounds;
+  }
+
+
+  function calculateUserLevel(userXP) {
+    const levelBounds = Levels();
+    let level = 0;
+    let NextLevel = 0;
+    let PreviousLevel = 0;
+    let progressPercentage = 0;
+  
+    for (let i = 0; i < levelBounds.length; i++) {
+      if (userXP >= levelBounds[i]) {
+        level = i + 1;
+        PreviousLevel = levelBounds[i];
+        if (i + 1 < levelBounds.length) {
+          NextLevel = levelBounds[i + 1];
+        } else {
+          NextLevel = levelBounds[i];
+        }
+      } else {
+        NextLevel = levelBounds[i];
+        break;
+      }
+    }
+  
+    if (level < levelBounds.length) {
+      let xpForNextLevel = NextLevel - PreviousLevel;
+      let currentLevelProgress = userXP - PreviousLevel;
+      progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+    } else {
+      progressPercentage = 100;
+    }
+  
+    return {
+      level: level,
+      progressPercentage: Math.round(progressPercentage * 100) / 100,
+      currentXP: userXP,
+      nextLevelXP: NextLevel
+    };
+  }
 
 window.onload = fetchAccountData;

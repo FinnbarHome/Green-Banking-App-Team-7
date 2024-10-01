@@ -60,8 +60,8 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     var redStreakMultiplier = 0;
     var greenStreakMultiplier = 0;
 
-    let isGreenTransaction = EIS > greenThreshold;
-    let isRedTransaction = EIS < redThreshold;
+    let isGreenTransaction = EIS >= greenThreshold;
+    let isRedTransaction = EIS <= redThreshold;
 
     if (isGreenTransaction) {
       streak = streak < 0 ? 1 : streak + 1;
@@ -74,7 +74,7 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     let greenStreak = Math.max(0, streak);
     let redStreak = Math.abs(Math.min(0, streak));
 
-    if (greenStreak % 5 === 0 && greenStreak > 0) {
+    if (greenStreak % 5 === 0 && greenStreak > 0 || greenStreak > 5) {
       greenStreakMultiplier = Math.floor(greenStreak / 5);
       EIS += greenStreakMultiplier * streakMultiplier;
     }
@@ -168,8 +168,10 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     document.getElementById("xp").textContent = XPGain + " XP";
     document.getElementById("paymentAmount").textContent = "£" + paymentAmount;
     document.getElementById("payee-name").textContent = payeeName;
-    document.getElementById("Streak").textContent = streak;
-    document.getElementById("Level").textContent = newLevel;
+    const streakElement = document.getElementById("Streak");
+    streakElement.textContent = Math.abs(streak);
+    streakElement.style.color = streak >= 0 ? 'green' : 'red';
+        document.getElementById("Level").textContent = newLevel;
     document.getElementById("progress-bar").style.width = `${percentageProgress}%`;
 
     document.getElementById("HomeButton").addEventListener("click", function() {
