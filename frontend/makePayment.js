@@ -35,7 +35,12 @@ async function handlePayment(event) {
     document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
 
   } catch (error) {
-    console.error("An error occurred during the payment process:", error);
+    if (error.message.includes("Company not found")) {
+      alert("The payee name you entered does not exist. Please check and try again."); // User-friendly message
+    } else {
+      console.error("An error occurred during the payment process:", error);
+      alert("An unexpected error occurred. Please try again."); // General error message
+    }
   }
 }
 
