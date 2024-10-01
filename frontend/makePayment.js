@@ -170,7 +170,11 @@ document.getElementById("payNowButton").addEventListener("click", async (event) 
     document.getElementById("payee-name").textContent = payeeName;
     document.getElementById("Streak").textContent = streak;
     document.getElementById("Level").textContent = newLevel;
-    document.getElementById("ProgressPercentage")
+    document.getElementById("progress-bar").style.width = `${percentageProgress}%`;
+
+    document.getElementById("HomeButton").addEventListener("click", function() {
+      window.location.href = "home.html"
+    });
     
 
   } catch (error) {
@@ -255,13 +259,13 @@ function clearBox()
                 <div class="border-2 border-x-0 border-green-800 pb-5 border-t-0">
                   <h2 class="text-xl mt-3 font-bold text-center text-white mb-3 ">Your progress to the next green level:</h2>
                     <div class="w-full h-6 mt-2 rounded-full bg-green-900">
-                    <div class="h-6 bg-green-600 rounded-full" style="width: 30%"> 
+                    <div id="progress-bar" class="h-6 bg-green-600 rounded-full" style="width: 0%"> 
                   </div>
                   </div>
                 </div>
             
             <div class="flex justify-center space-x-4">
-                <button class="bg-green-700 text-white font-bold py-2 px-4 rounded mx-2 my-5">Back to Account Screen</button>
+                <button id="HomeButton" class="bg-green-700 text-white font-bold py-2 px-4 rounded mx-2 my-5">Back to Account Screen</button>
             </div>
             </div>
 
