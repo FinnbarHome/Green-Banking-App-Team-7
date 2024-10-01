@@ -165,50 +165,50 @@ function Levels() {
     const levelBounds = [];
   
     for (let i = 0; i < 11; i++) {
-      let bounds = i / denominator;
-      bounds = Math.pow(bounds, power);
-      levelBounds[i] = Math.round(bounds);
+        let bounds = i / denominator;
+        bounds = Math.pow(bounds, power);
+        levelBounds[i] = Math.round(bounds);
     }
     return levelBounds;
   }
 
 
-  function calculateUserLevel(userXP) {
+function calculateUserLevel(userXP) {
     const levelBounds = Levels();
     let level = 0;
     let NextLevel = 0;
     let PreviousLevel = 0;
     let progressPercentage = 0;
-  
+
     for (let i = 0; i < levelBounds.length; i++) {
-      if (userXP >= levelBounds[i]) {
+    if (userXP >= levelBounds[i]) {
         level = i + 1;
         PreviousLevel = levelBounds[i];
-        if (i + 1 < levelBounds.length) {
-          NextLevel = levelBounds[i + 1];
-        } else {
-          NextLevel = levelBounds[i];
-        }
-      } else {
+    if (i + 1 < levelBounds.length) {
+        NextLevel = levelBounds[i + 1];
+    } else {
+        NextLevel = levelBounds[i];
+    }
+    } else {
         NextLevel = levelBounds[i];
         break;
-      }
     }
-  
-    if (level < levelBounds.length) {
-      let xpForNextLevel = NextLevel - PreviousLevel;
-      let currentLevelProgress = userXP - PreviousLevel;
-      progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
-    } else {
-      progressPercentage = 100;
-    }
-  
-    return {
-      level: level,
-      progressPercentage: Math.round(progressPercentage * 100) / 100,
-      currentXP: userXP,
-      nextLevelXP: NextLevel
-    };
-  }
+}
+
+if (level < levelBounds.length) {
+    let xpForNextLevel = NextLevel - PreviousLevel;
+    let currentLevelProgress = userXP - PreviousLevel;
+    progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+} else {
+    progressPercentage = 100;
+}
+
+return {
+    level: level,
+    progressPercentage: Math.round(progressPercentage * 100) / 100,
+    currentXP: userXP,
+    nextLevelXP: NextLevel
+};
+}
 
 window.onload = fetchAccountData;

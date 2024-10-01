@@ -53,6 +53,62 @@ router.post("/transactions", async (req, res) => {
     await db.collection("Companies").updateOne({ "Account Number": Sender }, { $inc: { Balance: -Amount } });
     await db.collection("Companies").updateOne({ "Account Number": Recipient }, { $inc: { Balance: Amount } });
 
+    // Fetch payee data for EIS calculation
+    const payeeData = await db.collection("Companies").findOne({ "Account Number": Recipient });
+    const CE = payeeData["Carbon Emissions"] || 0;
+    const WM = payeeData["Waste Management"] || 0;
+    const SP = payeeData["Sustainability Practices"] || 0;
+
+    // Calculate EIS
+    let EIS = (CE + WM + SP) / 30;
+
+    // Fetch payer's current streak and XP
+    const payerData = await db.collection("Companies").findOne({ "Account Number": Sender });
+    let streak = payerData["Streak"] || 0;
+    let userXP = payerData["XP"] || 0;
+
+    // Define thresholds and multipliers
+    const greenThreshold = 0.7;
+    const redThreshold = 0.3;
+    const streakMultiplier = 0.1;
+    let greenStreakMultiplier = 0;
+    let redStreakMultiplier = 0;
+
+    // Determine if the transaction is green or red
+    let isGreenTransaction = EIS >= greenThreshold;
+    let isRedTransaction = EIS <= redThreshold;
+
+    // Update streak based on the transaction type
+    if (isGreenTransaction) {
+      streak = streak < 0 ? 1 : streak + 1;
+    } else if (isRedTransaction) {
+      streak = streak > 0 ? -1 : streak - 1;
+    } else {
+      streak = 0;
+    }
+
+    let greenStreak = Math.max(0, streak);
+    let redStreak = Math.abs(Math.min(0, streak));
+
+    // Apply streak multipliers
+    if (greenStreak % 5 === 0 && greenStreak > 0 || greenStreak > 5) {
+      greenStreakMultiplier = Math.floor(greenStreak / 5);
+      EIS += greenStreakMultiplier * streakMultiplier;
+    }
+
+    if (redStreak % 5 === 0 && redStreak > 0 || redStreak > 5) {
+      let levelInfo = calculateUserLevel(userXP);
+      let decreaseRed = levelInfo.level / 2;
+      redStreakMultiplier = Math.floor(redStreak / 5);
+      EIS -= redStreakMultiplier * streakMultiplier * decreaseRed;
+    }
+
+    // Calculate XP gain based on EIS and payment amount
+    let XPGain = Math.round(EIS * Amount);
+
+    // Update XP and streak for the payer
+    await db.collection("Companies").updateOne({ "Account Number": Sender }, { $inc: { XP: XPGain, Streak: streak } });
+
     // Get the updated balances and XP
     const updatedSender = await db.collection("Companies").findOne({ "Account Number": Sender });
     const updatedRecipient = await db.collection("Companies").findOne({ "Account Number": Recipient });
@@ -61,12 +117,14 @@ router.post("/transactions", async (req, res) => {
     notifyClient(Sender, 'transactionUpdate', {
       transaction: newTransaction,
       updatedBalance: updatedSender.Balance,
-      updatedXP: updatedSender.XP
+      updatedXP: updatedSender.XP,
+      updatedStreak: updatedSender.Streak
     });
     notifyClient(Recipient, 'transactionUpdate', {
       transaction: newTransaction,
       updatedBalance: updatedRecipient.Balance,
-      updatedXP: updatedRecipient.XP
+      updatedXP: updatedRecipient.XP,
+      updatedStreak: updatedRecipient.Streak
     });
 
     // Respond with the created transaction
@@ -75,6 +133,58 @@ router.post("/transactions", async (req, res) => {
     handleError(res, error);
   }
 });
+
+// Helper function to calculate user level based on XP
+function calculateUserLevel(userXP) {
+  const levelBounds = Levels();
+  let level = 0;
+  let NextLevel = 0;
+  let PreviousLevel = 0;
+  let progressPercentage = 0;
+
+  for (let i = 0; i < levelBounds.length; i++) {
+    if (userXP >= levelBounds[i]) {
+      level = i + 1;
+      PreviousLevel = levelBounds[i];
+      if (i + 1 < levelBounds.length) {
+        NextLevel = levelBounds[i + 1];
+      } else {
+        NextLevel = levelBounds[i];
+      }
+    } else {
+      NextLevel = levelBounds[i];
+      break;
+    }
+  }
+
+  if (level < levelBounds.length) {
+    let xpForNextLevel = NextLevel - PreviousLevel;
+    let currentLevelProgress = userXP - PreviousLevel;
+    progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+  } else {
+    progressPercentage = 100;
+  }
+
+  return {
+    level: level,
+    progressPercentage: Math.round(progressPercentage * 100) / 100,
+    currentXP: userXP,
+    nextLevelXP: NextLevel
+  };
+}
+
+function Levels() {
+  const power = 2.5;
+  const denominator = 0.3;
+  const levelBounds = [];
+
+  for (let i = 0; i < 11; i++) {
+    let bounds = i / denominator;
+    bounds = Math.pow(bounds, power);
+    levelBounds[i] = Math.round(bounds);
+  }
+  return levelBounds;
+}
 
 // GET View all transactions
 router.get("/transactions", async (req, res) => {
