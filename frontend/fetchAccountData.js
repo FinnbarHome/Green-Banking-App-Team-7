@@ -107,7 +107,7 @@ function getBgColor(companyData) {
         (companyData['Waste Management'] || 0) +
         (companyData['Sustainability Practices'] || 0);
 
-    return combinedScore < 9 ? 'bg-red-900' :
+    return combinedScore <= 9 ? 'bg-red-900' :
            combinedScore <= 21 ? 'bg-orange-900' : 'bg-green-900';
 }
 
