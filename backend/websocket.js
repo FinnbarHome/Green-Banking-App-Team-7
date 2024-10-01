@@ -38,5 +38,4 @@ function notifyClient(accountNumber, updateType, data) {
     }
 }
 
-
 module.exports = { setupWebSocket, notifyClient };

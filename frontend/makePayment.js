@@ -1,132 +1,275 @@
-document.getElementById("payNowButton").addEventListener("click", handlePayment);
-
-async function handlePayment(event) {
-  event.preventDefault(); // Prevent form from submitting
+// Payment logic
+document.getElementById("payNowButton").addEventListener("click", async (event) => {
+  event.preventDefault(); // Prevent form from submitting and reloading the page
 
   try {
-    const paymentAmount = parseFloat(document.getElementById("payment-amount").value);
-    const payeeName = document.getElementById("payee-name").value;
-    const paymentReference = document.getElementById("payment-reference").value;
+    var paymentAmount = parseFloat(document.getElementById("payment-amount").value);
+    var payeeName = document.getElementById("payee-name").value;
+    var paymentReference = document.getElementById("payment-reference").value;
 
-    validatePaymentInputs(payeeName, paymentAmount);
+    if (!payeeName) {
+      throw new Error("Payee name is required");
+    }
 
-    const payeeAccountNumber = await fetchPayeeAccountNumber(payeeName);
-    const payerAccountNumber = getPayerAccountNumber();
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      throw new Error("Invalid payment amount");
+    }
 
-    const transactionData = createTransactionData(payerAccountNumber, payeeAccountNumber, paymentAmount, paymentReference);
+    // Fetch payee's company data
+    const payeeResponse = await fetch(`/api/companies/name/${payeeName}`);
+    if (!payeeResponse.ok) {
+      const errorData = await payeeResponse.json();
+      throw new Error(`Error fetching payee data: ${errorData.error}`);
+    }
 
-    await processTransaction(transactionData);
+    const payeeData = await payeeResponse.json();
+    if (!payeeData || !payeeData["Account Number"]) {
+      throw new Error("Payee not found or invalid data received");
+    }
 
-    // On successful payment, update the UI
-    clearBox({ payeeName, paymentAmount, xp: 100, streak: 5, level: 3, progress: 60 });
+    const payeeAccountNumber = payeeData["Account Number"];
+    const CE = payeeData["Carbon Emissions"] || 0;
+    const WM = payeeData["Waste Management"] || 0;
+    const SP = payeeData["Sustainability Practices"] || 0;
+
+    // Calculate EIS
+    let EIS = (CE + WM + SP) / 30;
+
+    // Get payer's account number from localStorage
+    let payerAccountNumber = localStorage.getItem('accountNumber');
+    if (!payerAccountNumber) {
+      throw new Error("Payer account number not found in localStorage");
+    }
+
+    payerAccountNumber = parseInt(payerAccountNumber);
+
+    // Fetch payer's account data
+    const payerResponse = await fetch(`/api/companies/${payerAccountNumber}`);
+    if (!payerResponse.ok) {
+      const errorData = await payerResponse.json();
+      throw new Error(`Error fetching payer data: ${errorData.error}`);
+    }
+    const payerData = await payerResponse.json();
+
+    let streak = payerData["Streak"] || 0;
+    let userXP = payerData["XP"] || 0;
+
+    const greenThreshold = 0.7;
+    const redThreshold = 0.3;
+    const streakMultiplier = 0.1;
+    var redStreakMultiplier = 0;
+    var greenStreakMultiplier = 0;
+
+    let isGreenTransaction = EIS >= greenThreshold;
+    let isRedTransaction = EIS <= redThreshold;
+
+    if (isGreenTransaction) {
+      streak = streak < 0 ? 1 : streak + 1;
+    } else if (isRedTransaction) {
+      streak = streak > 0 ? -1 : streak - 1;
+    } else {
+      streak = 0;
+    }
+
+    let greenStreak = Math.max(0, streak);
+    let redStreak = Math.abs(Math.min(0, streak));
+
+    if (greenStreak % 5 === 0 && greenStreak > 0 || greenStreak > 5) {
+      greenStreakMultiplier = Math.floor(greenStreak / 5);
+      EIS += greenStreakMultiplier * streakMultiplier;
+    }
+
+    if (redStreak % 5 === 0 && redStreak > 0 || redStreak > 5) {
+      let levelInfo = calculateUserLevel(userXP);
+      let decreaseRed = levelInfo.level / 2;
+      redStreakMultiplier = Math.floor(redStreak / 5);
+      EIS -= redStreakMultiplier * streakMultiplier * decreaseRed;
+    }
+
+    console.log(streak);
+
+    let XPGain = Math.round(EIS * paymentAmount);
+
+    // Update payer's balance (deduct payment amount)
+    const payerUpdateResponse = await fetch(`/api/companies/update-balance/${payerAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: -paymentAmount })
+    });
+
+    if (!payerUpdateResponse.ok) {
+      const errorData = await payerUpdateResponse.json();
+      throw new Error(`Error updating payer's balance: ${errorData.error}`);
+    }
+
+    // Update payee's balance (add payment amount)
+    const payeeUpdateResponse = await fetch(`/api/companies/update-balance/${payeeAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ amount: paymentAmount })
+    });
+
+    if (!payeeUpdateResponse.ok) {
+      const errorData = await payeeUpdateResponse.json();
+      throw new Error(`Error updating payee's balance: ${errorData.error}`);
+    }
+
+    const transactionData = {
+      Recipient: payeeAccountNumber,
+      Sender: payerAccountNumber,
+      Amount: paymentAmount,
+      Reference: paymentReference
+    };
+
+    const transactionResponse = await fetch('/api/transactions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(transactionData)
+    });
+
+    // Update XP for the payer
+    const payerXPUpdate = await fetch(`/api/companies/update-xp/${payerAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ xpAmount: XPGain })
+    });
+
+    if (!payerXPUpdate.ok) {
+      const errorData = await payerXPUpdate.json();
+      throw new Error(`Error updating payer's XP: ${errorData.error}`);
+    }
+
+    // Update streak for the payer
+    const payerStreakUpdate = await fetch(`/api/companies/update-streak/${payerAccountNumber}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ streakValue: streak })
+    });
+
+    if (!payerStreakUpdate.ok) {
+      const errorData = await payerStreakUpdate.json();
+      throw new Error(`Error updating payer's streak: ${errorData.error}`);
+    }
+
+    // Fetch updated payer data to display new balance and XP
+    const updatedPayerResponse = await fetch(`/api/companies/${payerAccountNumber}`);
+    if (!updatedPayerResponse.ok) {
+      throw new Error(`Error fetching updated payer data`);
+    }
+    const updatedPayerData = await updatedPayerResponse.json();
+
+    const newLevelInfo = calculateUserLevel(userXP + XPGain);
+    const newLevel = newLevelInfo.level;
+    const percentageProgress = newLevelInfo.progressPercentage;
+
+    clearBox();
+
+    // Update UI with new balance and XP
+    document.getElementById("xp").textContent = XPGain + " XP";
+    document.getElementById("paymentAmount").textContent = "£" + paymentAmount;
+    document.getElementById("payee-name").textContent = payeeName;
+    const streakElement = document.getElementById("Streak");
+    streakElement.textContent = Math.abs(streak);
+    streakElement.style.color = streak >= 0 ? 'green' : 'red';
+        document.getElementById("Level").textContent = newLevel;
+    document.getElementById("progress-bar").style.width = `${percentageProgress}%`;
+
+    document.getElementById("HomeButton").addEventListener("click", function() {
+      window.location.href = "home.html"
+    });
+    
+
   } catch (error) {
-    console.error("Error during payment:", error);
+    console.error("An error occurred during the payment process:", error);
   }
-}
+});
 
-// Helper function to validate payment inputs
-function validatePaymentInputs(payeeName, paymentAmount) {
-  if (!payeeName) throw new Error("Payee name is required");
-  if (isNaN(paymentAmount) || paymentAmount <= 0) throw new Error("Invalid payment amount");
-}
-
-// Fetch payee's account number by name
-async function fetchPayeeAccountNumber(payeeName) {
-  const response = await fetch(`/api/companies/name/${payeeName}`);
-  if (!response.ok) {
-    const { error } = await response.json();
-    throw new Error(`Error fetching payee data: ${error}`);
-  }
-  const payeeData = await response.json();
-  return payeeData["Account Number"];
-}
-
-// Get payer's account number from localStorage
-function getPayerAccountNumber() {
-  const payerAccountNumber = localStorage.getItem('accountNumber');
-  if (!payerAccountNumber) throw new Error("Payer account number not found in localStorage");
-  return parseInt(payerAccountNumber);
-}
-
-// Create transaction data object
-function createTransactionData(payerAccountNumber, payeeAccountNumber, paymentAmount, paymentReference) {
-  return {
-    Recipient: payeeAccountNumber,
-    Sender: payerAccountNumber,
-    Amount: paymentAmount,
-    Reference: paymentReference
-  };
-}
-
-// Process transaction by sending it to the backend
-async function processTransaction(transactionData) {
-  const response = await fetch('/api/transactions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(transactionData)
-  });
-  if (!response.ok) throw new Error('Error processing transaction');
-}
-
-// Calculate user level
 function calculateUserLevel(userXP) {
   const levelBounds = Levels();
-  let level = 0, nextLevel = 0, previousLevel = 0, progressPercentage = 0;
+  let level = 0;
+  let NextLevel = 0;
+  let PreviousLevel = 0;
+  let progressPercentage = 0;
 
-  levelBounds.forEach((bound, i) => {
-    if (userXP >= bound) {
+  for (let i = 0; i < levelBounds.length; i++) {
+    if (userXP >= levelBounds[i]) {
       level = i + 1;
-      previousLevel = bound;
-      nextLevel = levelBounds[i + 1] || bound;
+      PreviousLevel = levelBounds[i];
+      if (i + 1 < levelBounds.length) {
+        NextLevel = levelBounds[i + 1];
+      } else {
+        NextLevel = levelBounds[i];
+      }
+    } else {
+      NextLevel = levelBounds[i];
+      break;
     }
-  });
+  }
 
   if (level < levelBounds.length) {
-    const xpForNextLevel = nextLevel - previousLevel;
-    const currentLevelProgress = userXP - previousLevel;
+    let xpForNextLevel = NextLevel - PreviousLevel;
+    let currentLevelProgress = userXP - PreviousLevel;
     progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
   } else {
     progressPercentage = 100;
   }
 
-  return { level, progressPercentage: Math.round(progressPercentage * 100) / 100, currentXP: userXP, nextLevelXP: nextLevel };
+  return {
+    level: level,
+    progressPercentage: Math.round(progressPercentage * 100) / 100,
+    currentXP: userXP,
+    nextLevelXP: NextLevel
+  };
 }
 
-// Levels array generator
 function Levels() {
-  return Array.from({ length: 11 }, (_, i) => Math.round(Math.pow(i / 0.3, 2.5)));
+  const power = 2.5;
+  const denominator = 0.3;
+  const levelBounds = [];
+
+  for (let i = 0; i < 11; i++) {
+    let bounds = i / denominator;
+    bounds = Math.pow(bounds, power);
+    levelBounds[i] = Math.round(bounds);
+  }
+  return levelBounds;
 }
 
-// Clear UI and update with payment success details
-function clearBox({ payeeName, paymentAmount, xp, streak, level, progress }) {
-  document.getElementById("paymentElements").innerHTML = `
+function clearBox()
+      {
+    document.getElementById("paymentElements").innerHTML = `
+    
     <h1 class="text-3xl text-green-400 font-bold text-white mt-5 text-center">Payment Successful!</h1>
-    <h2 class="text-xl font-bold text-white text-center py-2 pb-5">Your payment to: <span class="text-green-400">${payeeName}</span></h2>
-    <div class="border-green-800 border-2 py-5 border-x-0">
-      <div class="grid grid-flow-col gap-1 mb-2">
-        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You spent...</h2>
-        <h2 class="text-xl text-white text-right px-5 rounded-r-lg text-red-300">-£${paymentAmount.toFixed(2)}</h2>
-      </div>
-      <div class="grid grid-flow-col gap-1 mb-2">
-        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You gained...</h2>
-        <h2 class="text-xl text-white text-right px-5 rounded-r-lg">${xp} XP</h2>
-      </div>
-      <div class="grid grid-flow-col gap-1 mb-2">
-        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your streak is...</h2>
-        <h2 class="text-xl text-white text-right px-5 rounded-r-lg">${streak}</h2>
-      </div>
-      <div class="grid grid-flow-col gap-1 mb-2">
-        <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your level is...</h2>
-        <h2 class="text-xl text-white text-right px-5 rounded-r-lg">${level}</h2>
-      </div>
-      <div class="border-2 border-x-0 border-green-800 pb-5 border-t-0">
-        <h2 class="text-xl mt-3 font-bold text-center text-white mb-3">Your progress to the next green level:</h2>
-        <div class="w-full h-6 mt-2 rounded-full bg-green-900">
-          <div id="progress-bar" class="h-6 bg-green-600 rounded-full" style="width: ${progress}%"></div>
-        </div>
-      </div>
-      <div class="flex justify-center space-x-4">
-        <button id="HomeButton" class="bg-green-700 text-white font-bold py-2 px-4 rounded mx-2 my-5">Back to Account Screen</button>
-      </div>
-    </div>`;
+            <h2 class="text-xl font-bold text-white text-center py-2 pb-5">Your payment to: <span id="payee-name" class="text-green-400">{Company Name Here}</span></h2>
+            <div class ="border-green-800 border-2 py-5 border-x-0">
+                <div class="grid grid-flow-col gap-1 mb-2">
+                    <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You spent...</h2>
+                    <h2 id="paymentAmount" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg text-red-300">-£100.00</h2>
+                </div>
+                <div class="grid grid-flow-col gap-1 mb-2">
+                    <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">You gained...</h2>
+                    <h2 id="xp" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">{XP}</h2>
+                </div>
+                <div class="grid grid-flow-col gap-1 mb-2">
+                    <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your streak is...</h2>
+                    <h2 id="Streak" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">{Streak}</h2>
+                </div>
+                <div class="grid grid-flow-col gap-1 mb-2">
+                    <h2 class="text-xl font-bold text-white px-5 rounded-l-lg">Your level is...</h2>
+                    <h2 id="Level" class="row-start-1 text-xl text-white text-right px-5 rounded-r-lg">{Level}</h2>
+                </div>
+                <div class="border-2 border-x-0 border-green-800 pb-5 border-t-0">
+                  <h2 class="text-xl mt-3 font-bold text-center text-white mb-3 ">Your progress to the next green level:</h2>
+                    <div class="w-full h-6 mt-2 rounded-full bg-green-900">
+                    <div id="progress-bar" class="h-6 bg-green-600 rounded-full" style="width: 0%"> 
+                  </div>
+                  </div>
+                </div>
+            
+            <div class="flex justify-center space-x-4">
+                <button id="HomeButton" class="bg-green-700 text-white font-bold py-2 px-4 rounded mx-2 my-5">Back to Account Screen</button>
+            </div>
+            </div>
+
+    `;
 }
