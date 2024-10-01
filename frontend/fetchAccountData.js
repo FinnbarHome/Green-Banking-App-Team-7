@@ -1,103 +1,106 @@
 async function fetchAccountData() {
     try {
         const accountNumber = localStorage.getItem('accountNumber');
-        if (!accountNumber) {
-            console.error("No account number found in localStorage.");
-            return;
-        }
-
-        // Fetch the company data using the account number
-        const companyResponse = await fetch(`/api/companies/${accountNumber}`);
-        if (!companyResponse.ok) {
-            const errorData = await companyResponse.json();
-            console.error("Error fetching company data:", errorData.error);
-            return;
-        }
-
-        const companyData = await companyResponse.json();
-
-        // Set the company data to the appropriate HTML elements
-        document.getElementById('Username').textContent = "Username: " + companyData['Company Name'];
-        document.getElementById('Balance').textContent = "Balance: £" + companyData['Balance'].toFixed(2);
-        document.getElementById('Level').textContent = "XP: " + companyData['XP'];
-
-        // Fetch the transaction history for the account number
+        if (!accountNumber) throw new Error("No account number found in localStorage.");
+        const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
+        if (!companyData) return;
+        updateDOM({
+            Username: `Username: ${companyData['Company Name']}`,
+            Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
+            Level: `XP: ${companyData['XP']}`
+        });
         await fetchTransactionHistory(accountNumber);
     } catch (error) {
-        console.error('Error fetching company data:', error);
+        console.error('Error fetching account data:', error);
     }
 }
 
 async function fetchTransactionHistory(accountNumber) {
     try {
-        const response = await fetch(`/api/transactions/${accountNumber}`);
-        if (!response.ok) {
-            const errorData = await response.json();
-            console.error("Error fetching transactions:", errorData.error);
-            return;
-        }
-
-        const transactions = await response.json();
-        const pastPaymentsElement = document.getElementById('pastPayments');
-        pastPaymentsElement.innerHTML = ''; // Clear any existing content
-
-        // Header Row
-        const headingRow = `
-            <div class="grid grid-cols-3 gap-4 mb-2 font-bold text-lg bg-gray-800 text-white px-5 py-2 rounded-lg">
-                <h2 class="text-center">Company</h2>
-                <h2 class="text-right">Amount</h2>
-                <h2 class="text-right">Date</h2>
-            </div>
-        `;
-        pastPaymentsElement.insertAdjacentHTML('beforeend', headingRow);
-
+        const transactions = await fetchData(`/api/transactions/${accountNumber}`, "transactions");
+        if (!transactions) return;
+        clearAndInsertHTML('pastPayments', transactionHeaderHTML());
+        const companyCache = {};
         for (const transaction of transactions) {
-            const isOutgoing = transaction.Sender === parseInt(accountNumber);
-            const amount = isOutgoing ? -transaction.Amount : transaction.Amount;
-            const transactionDate = new Date(transaction.date).toLocaleDateString(); // Format date
-
-            // Fetch company data for the company being transacted with
-            const transactedWithCompanyId = isOutgoing ? transaction.Recipient : transaction.Sender;
-            const transactedWithCompanyResponse = await fetch(`/api/companies/${transactedWithCompanyId}`);
-            const transactedWithCompany = await transactedWithCompanyResponse.json();
-
-            // Determine the company name
-            const companyName = transactedWithCompany['Company Name'] || transactedWithCompanyId;
-
-            // Determine the color based on the combined environmental score
-            let bgColor;
-            const combinedScore = (transactedWithCompany['Carbon Emissions'] || 0) + 
-                                  (transactedWithCompany['Waste Management'] || 0) + 
-                                  (transactedWithCompany['Sustainability Practices'] || 0);
-
-            if (combinedScore < 9) {
-                bgColor = 'bg-red-900'; // Red for score less than 9
-            } else if (combinedScore <= 21) {
-                bgColor = 'bg-orange-900'; // Amber for score between 9 and 21
-            } else {
-                bgColor = 'bg-green-900'; // Green for score between 22 and 30
-            }
-
-            // Transaction Element
-            const transactionElement = `
-                <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                    <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">
-                        ${companyName}
-                    </h2>
-                    <h2 class="col-span-1 text-xl text-white text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
-                        ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
-                    </h2>
-                    <h2 class="col-span-1 text-sm text-gray-400 text-right">
-                        ${transactionDate}
-                    </h2>
-                </div>
-            `;
-
-            pastPaymentsElement.insertAdjacentHTML('beforeend', transactionElement);
+            const { isOutgoing, amount, transactionDate, companyName, bgColor } = await prepareTransactionData(transaction, accountNumber, companyCache);
+            insertTransactionElement(isOutgoing, amount, transactionDate, companyName, bgColor);
         }
     } catch (error) {
         console.error('Error fetching transaction history:', error);
     }
+}
+
+// General function to fetch data and handle errors
+async function fetchData(url, dataType) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            const { error } = await response.json();
+            throw new Error(`Error fetching ${dataType}: ${error}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.error(error.message);
+        return null;
+    }
+}
+
+// Update multiple DOM elements at once
+function updateDOM(updates) {
+    Object.entries(updates).forEach(([id, text]) => {
+        document.getElementById(id).textContent = text;
+    });
+}
+
+// Clear content and insert new HTML in one go
+function clearAndInsertHTML(elementId, html) {
+    document.getElementById(elementId).innerHTML = html;
+}
+
+// Helper to generate transaction header HTML
+const transactionHeaderHTML = () => `
+    <div class="grid grid-cols-3 gap-4 mb-2 font-bold text-lg bg-gray-800 text-white px-5 py-2 rounded-lg">
+        <h2 class="text-center">Company</h2>
+        <h2 class="text-right">Amount</h2>
+        <h2 class="text-right">Date</h2>
+    </div>`;
+
+// Insert transaction element into the DOM
+function insertTransactionElement(isOutgoing, amount, transactionDate, companyName, bgColor) {
+    const transactionHTML = `
+        <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+            <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">${companyName}</h2>
+            <h2 class="col-span-1 text-xl text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
+                ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
+            </h2>
+            <h2 class="col-span-1 text-sm text-gray-400 text-right">${transactionDate}</h2>
+        </div>`;
+    document.getElementById('pastPayments').insertAdjacentHTML('beforeend', transactionHTML);
+}
+
+async function prepareTransactionData(transaction, accountNumber, companyCache) {
+    const isOutgoing = transaction.Sender === parseInt(accountNumber);
+    const amount = isOutgoing ? -transaction.Amount : transaction.Amount;
+    const transactionDate = new Date(transaction.date).toLocaleDateString();
+    const transactedWithCompanyId = isOutgoing ? transaction.Recipient : transaction.Sender;
+
+    if (!companyCache[transactedWithCompanyId]) {
+        companyCache[transactedWithCompanyId] = await fetchData(`/api/companies/${transactedWithCompanyId}`, "company data");
+    }
+    const transactedWithCompany = companyCache[transactedWithCompanyId] || {};
+    const companyName = transactedWithCompany['Company Name'] || transactedWithCompanyId;
+    const bgColor = getBgColor(transactedWithCompany);
+
+    return { isOutgoing, amount, transactionDate, companyName, bgColor };
+}
+
+function getBgColor(companyData) {
+    const combinedScore = (companyData['Carbon Emissions'] || 0) +
+        (companyData['Waste Management'] || 0) +
+        (companyData['Sustainability Practices'] || 0);
+
+    return combinedScore < 9 ? 'bg-red-900' :
+           combinedScore <= 21 ? 'bg-orange-900' : 'bg-green-900';
 }
 
 window.onload = fetchAccountData;
