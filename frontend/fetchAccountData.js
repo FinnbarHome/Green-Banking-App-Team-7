@@ -39,11 +39,14 @@ async function fetchAccountData() {
 
         const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
         if (!companyData) return;
+        const XP = companyData['XP'];
+        const levelInfo = calculateUserLevel(XP);
 
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
             Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
-            Level: `XP: ${companyData['XP']}`
+            Level: `Level: ${levelInfo.level}`,
+            XP: `XP: ${XP}`
         });
 
         await fetchTransactionHistory(accountNumber);
@@ -60,6 +63,7 @@ async function fetchTransactionHistory(accountNumber) {
     try {
         const transactions = await fetchData(`/api/transactions/${accountNumber}`, "transactions");
         if (!transactions) return;
+
         clearAndInsertHTML('pastPayments', transactionHeaderHTML());
         const companyCache = {};
         for (const transaction of transactions) {
@@ -109,13 +113,15 @@ const transactionHeaderHTML = () => `
 // Insert transaction element into the DOM
 function insertTransactionElement(isOutgoing, amount, transactionDate, companyName, bgColor) {
     const transactionHTML = `
-        <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-            <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">${companyName}</h2>
-            <h2 class="col-span-1 text-xl text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
-                ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
-            </h2>
-            <h2 class="col-span-1 text-sm text-gray-400 text-right">${transactionDate}</h2>
-        </div>`;
+        <a href="analysis.html?companyName=${encodeURIComponent(companyName)}">
+            <div class="grid grid-cols-3 gap-4 mb-4 p-4 border rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
+                <h2 class="col-span-1 ${bgColor} text-xl font-bold text-center text-white rounded-lg py-2">${companyName}</h2>
+                <h2 class="col-span-1 text-xl text-right ${isOutgoing ? 'text-red-400' : 'text-green-400'}">
+                    ${isOutgoing ? '-' : '+'} £${Math.abs(amount).toFixed(2)}
+                </h2>
+                <h2 class="col-span-1 text-sm text-gray-400 text-right">${transactionDate}</h2>
+            </div>
+        </a>`;
     document.getElementById('pastPayments').insertAdjacentHTML('beforeend', transactionHTML);
 }
 
@@ -143,5 +149,57 @@ function getBgColor(companyData) {
     return combinedScore < 9 ? 'bg-red-900' :
            combinedScore <= 21 ? 'bg-orange-900' : 'bg-green-900';
 }
+
+function Levels() {
+    const power = 2.5;
+    const denominator = 0.3;
+    const levelBounds = [];
+  
+    for (let i = 0; i < 11; i++) {
+      let bounds = i / denominator;
+      bounds = Math.pow(bounds, power);
+      levelBounds[i] = Math.round(bounds);
+    }
+    return levelBounds;
+  }
+
+
+  function calculateUserLevel(userXP) {
+    const levelBounds = Levels();
+    let level = 0;
+    let NextLevel = 0;
+    let PreviousLevel = 0;
+    let progressPercentage = 0;
+  
+    for (let i = 0; i < levelBounds.length; i++) {
+      if (userXP >= levelBounds[i]) {
+        level = i + 1;
+        PreviousLevel = levelBounds[i];
+        if (i + 1 < levelBounds.length) {
+          NextLevel = levelBounds[i + 1];
+        } else {
+          NextLevel = levelBounds[i];
+        }
+      } else {
+        NextLevel = levelBounds[i];
+        break;
+      }
+    }
+  
+    if (level < levelBounds.length) {
+      let xpForNextLevel = NextLevel - PreviousLevel;
+      let currentLevelProgress = userXP - PreviousLevel;
+      progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+    } else {
+      progressPercentage = 100;
+    }
+  
+    return {
+      level: level,
+      progressPercentage: Math.round(progressPercentage * 100) / 100,
+      currentXP: userXP,
+      nextLevelXP: NextLevel
+    };
+  }
 
 window.onload = fetchAccountData;

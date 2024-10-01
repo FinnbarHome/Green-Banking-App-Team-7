@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="./output.css" rel="stylesheet">
-    <title>Rewards</title>
+    <title>EcoCents - Rewards</title>
 </head>
 <body class="bg-gray-900 flex flex-col min-h-screen"> 
   <nav class="bg-green-900">
@@ -14,6 +14,7 @@
               <div class="ml-6">
                   <a href="home.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Home</a>
                   <a href="payment.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
+                  <a href="rewards.html" class="rounded px-3 py-2 bg-black hover:bg-green-700 text-white">Rewards</a>
                   <a href="login.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
               </div>
             </div>
@@ -23,16 +24,16 @@
 
     <div class="container my-5 mx-auto flex-grow">
       <div class="mx-5">
-        <h1 class="text-3xl font-bold text-white text-center border-2 border-green-800 border-x-0 border-t-0 pb-4">Rewards</h1>
+        <h1 class="text-3xl font-bold text-white text-center mt-5 border-2 border-green-800 border-x-0 border-t-0 pb-4">Rewards</h1>
         <div class="mt-5 bg-gray-700 py-4 rounded-lg border-2">
-            <p class="text-xl text-white text-center"><span id="username" class="text-orange-500 font-bold"></span>, you are level <span id="greenLevel" class="font-bold text-orange-500"></span> and have earned a total of <span id="xp" class="font-bold text-orange-500"></span> XP.</p>
+            <p class="text-2xl text-white text-center"><span id="username" class="text-orange-500 font-bold"></span>, you are level <span id="greenLevel" class="font-bold text-orange-500"></span> and have earned a total of <span id="xp" class="font-bold text-orange-500"></span> XP.</p>
         </div>
-        <div id="noRewards" class="text-xl mt-3 font-bold text-white text-center border-2 border-green-800 border-x-0 border-b-0 pt-4"></div>
+        <div id="noRewards" class="text-2xl mt-3 font-bold text-white text-center border-2 border-green-800 border-x-0 border-b-0 pt-4"></div>
         
-        <p class="text-l mt-3 text-white text-center">Rewards can be accessed by attaining XP and increasing your Green Level, which increases by making transactions with eco-friendly companies.</p>
-        <p class="text-l mt-2 text-white text-center border-2 border-green-800 border-x-0 border-t-0 pb-4">Check back here after you level up to see if you've earned any rewards.</p>
+        <p class="text-xl mt-3 text-white text-center">Rewards can be accessed by attaining XP and increasing your Green Level, which increases by making transactions with eco-friendly companies.</p>
+        <p class="text-xl mt-3 text-white text-center border-2 border-green-800 border-x-0 border-t-0 pb-4">Check back here after you level up to see if you've earned any rewards.</p>
         
-        <div id="rewardsContainer" class="mt-3 border-2 border-green-800 border-x-0 py-4">
+        <div id="rewardsContainer" class="mt-3 py-4">
             <h2 class="text-xl font-bold text-white text-center mb-4">You've earned some <span class="text-orange-500">rewards!</span></h2>
             <!-- Rewards will be dynamically added here -->
         </div>
@@ -48,5 +49,5 @@
 
   <!-- Script to fetch and display rewards -->
   <script src="fetchRewards.js"></script>
-</body>
+  </body>
 </html>

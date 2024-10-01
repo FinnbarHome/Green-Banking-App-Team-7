@@ -15,6 +15,7 @@
                 <div class="ml-6">
                     <a href="home.html" class="rounded bg-black text-white px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
                     <a href="payment.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
+                    <a href="rewards.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
                     <a href="login.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
                 </div>
             </div>
@@ -37,7 +38,10 @@
                     <div class="text-center py-2">
                         <h2 id="Username" class="text-white font-bold">Username</h2>
                         <h2 id="Balance" class="text-white">Account Balance:</h2>
-                        <h2 id="Level" class="text-white">XP Level:</h2>
+                        <h2 id="Level" class="text-white">Level:</h2>
+                        <h2 id="XP" class="text-white">XP Level:</h2>
+
+
                     </div>
                 </div>
             </div>
@@ -61,3 +65,58 @@
     <script src="fetchAccountData.js"></script>
 </body>
 </html>
+
+<script>
+
+function Levels() {
+    const power = 2.5;
+    const denominator = 0.3;
+    const levelBounds = [];
+  
+    for (let i = 0; i < 11; i++) {
+      let bounds = i / denominator;
+      bounds = Math.pow(bounds, power);
+      levelBounds[i] = Math.round(bounds);
+    }
+    return levelBounds;
+  }
+
+
+  function calculateUserLevel(userXP) {
+    const levelBounds = Levels();
+    let level = 0;
+    let NextLevel = 0;
+    let PreviousLevel = 0;
+    let progressPercentage = 0;
+  
+    for (let i = 0; i < levelBounds.length; i++) {
+      if (userXP >= levelBounds[i]) {
+        level = i + 1;
+        PreviousLevel = levelBounds[i];
+        if (i + 1 < levelBounds.length) {
+          NextLevel = levelBounds[i + 1];
+        } else {
+          NextLevel = levelBounds[i];
+        }
+      } else {
+        NextLevel = levelBounds[i];
+        break;
+      }
+    }
+  
+    if (level < levelBounds.length) {
+      let xpForNextLevel = NextLevel - PreviousLevel;
+      let currentLevelProgress = userXP - PreviousLevel;
+      progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+    } else {
+      progressPercentage = 100;
+    }
+  
+    return {
+      level: level,
+      progressPercentage: Math.round(progressPercentage * 100) / 100,
+      currentXP: userXP,
+      nextLevelXP: NextLevel
+    };
+  }
+</script>
