@@ -21,7 +21,7 @@ async function fetchCompanyData() {
       // Call getRagRating and pass the calculated EIS
       getRagRating(eiScore);  // Pass the environmental impact score
 
-      spendCat = companyData['Spening Category'];
+      spendCat = companyData['Spending Category'];
       greenAlternatives(spendCat);
       
   } catch (error) {
@@ -66,17 +66,24 @@ async function greenAlternatives(spendingCategory) {
 
     const companies = await response.json();
 
+    // Log the companies to see what is being returned
+    console.log('Companies:', companies);
+
     const greenCompanies = companies
-      .filter(company => 
-        company.SpendingCategory === spendingCategory && 
-        calculateEIS(company) >= 0.7
-      )
+      .filter(company => {
+        // Check if SpendingCategory exists and is a valid string
+        const companySpendingCategory = company["Spending Category"] || '';
+        console.log('Company Spending Category:', companySpendingCategory);
+
+        return companySpendingCategory.toLowerCase() === spendingCategory.toLowerCase() &&
+               calculateEIS(company) >= 0.7;
+      })
       .sort((a, b) => calculateEIS(b) - calculateEIS(a))
       .slice(0, 3);
 
-      console.log(greenCompanies);
-    
-    // Now you need to display the green alternatives on the page
+    console.log('Green Companies:', greenCompanies);
+
+    // Now display the green alternatives on the page
     displayGreenAlternatives(greenCompanies);
 
   } catch (error) {
@@ -84,6 +91,8 @@ async function greenAlternatives(spendingCategory) {
     throw error;
   }
 }
+
+
 
 function calculateEIS(company) {
   // Assuming the company data contains these fields:
