@@ -21,8 +21,9 @@ async function fetchCompanyData() {
       // Call getRagRating and pass the calculated EIS
       getRagRating(eiScore);  // Pass the environmental impact score
 
-      spendCat = companyData['Spening Category'];
-      greenAlternatives(spendCat);
+      spendCat = companyData['Spending Category'];
+      compName = companyData['Company Name'];
+      greenAlternatives(compName, spendCat, eiScore);
       
   } catch (error) {
       console.error('Error fetching company data:', error);
@@ -45,15 +46,12 @@ function getRagRating(eiScore) {
   }
 }
 
-
-
-
 function getCompanyNameFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get('companyName');
 }
 
-async function greenAlternatives(spendingCategory) {
+async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
   try {
     const response = await fetch('/api/companies', {
       method: 'GET',
@@ -66,17 +64,24 @@ async function greenAlternatives(spendingCategory) {
 
     const companies = await response.json();
 
+    // Log the companies to see what is being returned
+    console.log('Companies:', companies);
+
     const greenCompanies = companies
-      .filter(company => 
-        company.SpendingCategory === spendingCategory && 
-        calculateEIS(company) >= 0.7
-      )
+      .filter(company => {
+        // Check if SpendingCategory exists and is a valid string
+        const companySpendingCategory = company["Spending Category"] || '';
+        console.log('Company Spending Category:', companySpendingCategory);
+
+        return companySpendingCategory.toLowerCase() === spendingCategory.toLowerCase() &&
+               calculateEIS(company) >= 7 && company["Company Name"] != companyName && calculateEIS(company) >= CompanyEIS;
+      })
       .sort((a, b) => calculateEIS(b) - calculateEIS(a))
       .slice(0, 3);
 
-      console.log(greenCompanies);
-    
-    // Now you need to display the green alternatives on the page
+    console.log('Green Companies:', greenCompanies);
+
+    // Now display the green alternatives on the page
     displayGreenAlternatives(greenCompanies);
 
   } catch (error) {
@@ -84,6 +89,8 @@ async function greenAlternatives(spendingCategory) {
     throw error;
   }
 }
+
+
 
 function calculateEIS(company) {
   // Assuming the company data contains these fields:
@@ -104,20 +111,31 @@ function displayGreenAlternatives(greenCompanies) {
   alternativesContainer.innerHTML = ''; // Clear any previous content
 
   if (greenCompanies.length === 0) {
-    alternativesContainer.textContent = "No green alternatives available.";
+    alternativesContainer.textContent = "No green alternative companies available";
+    alternativesContainer.classList.add("text-red-400");
+    alternativesContainer.classList.add("font-bold");
+    alternativesContainer.classList.add("text-center");
+    alternativesContainer.classList.add("text-xl");
     return;
   }
 
   greenCompanies.forEach(company => {
     const companyElement = document.createElement('div');
-    companyElement.classList.add('green-company');
+    companyElement.classList.add(
+      'bg-gray-700',        
+      'p-4',                 
+      'rounded-lg',         
+      'shadow-md',           
+      'mb-4',                
+    );
     companyElement.innerHTML = `
-      <h3 class="text-xl font-bold text-green-500">${company['Company Name']}</h3>
-      <p>Environmental Impact Score: ${calculateEIS(company).toFixed(2)}</p>
+      <h3 class="text-xl font-bold text-green-400">${company['Company Name']}</h3>
+      <p class="text-white">Environmental Impact Score: ${calculateEIS(company).toFixed(2)}</p>
     `;
     alternativesContainer.appendChild(companyElement);
   });
 }
+
 
 
 // Call the function to fetch data when the page loads
