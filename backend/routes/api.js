@@ -9,14 +9,11 @@ const handleError = (res, error, status = 500, message = "An error occurred") =>
   res.status(status).json({ error: message });
 };
 
-// Utility function to find a company by account number
-const findCompany = async (accountNumber, res) => {
+// Utility function to find a company by a field
+const findCompany = async (filter, res, errorMsg = "Company not found") => {
   try {
-    const company = await db.collection("Companies").findOne({ "Account Number": parseInt(accountNumber) });
-    if (!company) {
-      res.status(404).json({ error: "Company not found" });
-      return null;
-    }
+    const company = await db.collection("Companies").findOne(filter);
+    if (!company) return res.status(404).json({ error: errorMsg });
     return company;
   } catch (error) {
     handleError(res, error);
@@ -36,34 +33,24 @@ router.get("/companies", async (req, res) => {
 
 // GET a company by Account Number
 router.get("/companies/:accountNumber", async (req, res) => {
-  const company = await findCompany(req.params.accountNumber, res);
+  const company = await findCompany({ "Account Number": parseInt(req.params.accountNumber) }, res);
   if (company) res.json(company);
 });
 
 // GET a company by Account Name
 router.get("/companies/name/:companyName", async (req, res) => {
-  try {
-    const company = await db.collection("Companies").findOne({ "Company Name": req.params.companyName });
-    if (!company) return res.status(404).json({ error: "Company not found" });
-    res.json(company);
-  } catch (error) {
-    handleError(res, error);
-  }
+  const company = await findCompany({ "Company Name": req.params.companyName }, res);
+  if (company) res.json(company);
 });
 
 // POST login route
 router.post("/login", async (req, res) => {
-  try {
-    const { username, accountNumber } = req.body;
-    const company = await db.collection("Companies").findOne({
-      "Company Name": username,
-      "Account Number": parseInt(accountNumber),
-    });
-    if (!company) return res.status(404).json({ error: "Company not found or account number does not match" });
-    res.json({ accountNumber: company["Account Number"] });
-  } catch (error) {
-    handleError(res, error);
-  }
+  const { username, accountNumber } = req.body;
+  const company = await findCompany({
+    "Company Name": username,
+    "Account Number": parseInt(accountNumber),
+  }, res, "Company not found or account number does not match");
+  if (company) res.json({ accountNumber: company["Account Number"] });
 });
 
 // POST a new company
@@ -74,11 +61,9 @@ router.post("/companies", async (req, res) => {
       return res.status(400).json({ error: "Company Name and Balance are required." });
     }
 
-    // Find the last company to assign the next account number
-    const existingCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
-    const accountNumber = existingCompany.length > 0 ? existingCompany[0]["Account Number"] + 1 : 1;
+    const lastCompany = await db.collection("Companies").find().sort({ "Account Number": -1 }).limit(1).toArray();
+    const accountNumber = lastCompany.length > 0 ? lastCompany[0]["Account Number"] + 1 : 1;
 
-    // Prepare the new company document
     const newCompany = {
       "Company Name": companyName,
       "Spending Category": "User",
@@ -92,10 +77,7 @@ router.post("/companies", async (req, res) => {
       "Streak": 0,
     };
 
-    // Insert the new company
     const result = await db.collection("Companies").insertOne(newCompany);
-
-    // Respond with the inserted document's details
     res.status(201).json({ _id: result.insertedId, ...newCompany });
   } catch (error) {
     handleError(res, error);
@@ -103,91 +85,46 @@ router.post("/companies", async (req, res) => {
 });
 
 // PUT utility function for updating fields
-const updateField = async (accountNumber, field, value, res) => {
+const updateField = async (accountNumber, update, res) => {
   try {
-    const updateResult = await db.collection("Companies").updateOne(
+    const result = await db.collection("Companies").updateOne(
       { "Account Number": parseInt(accountNumber) },
-      { $set: { [field]: value } } // Change from $inc to $set for direct field value setting
+      update
     );
+    if (result.matchedCount === 0) return res.status(404).json({ error: "Company not found" });
 
-    if (updateResult.matchedCount === 0) {
-      return res.status(404).json({ error: "Company not found" });
-    }
-
-    // Fetch the updated company after updating
-    const updatedCompany = await findCompany(accountNumber, res);
-    if (updatedCompany) {
-      return res.json(updatedCompany);
-    }
+    const updatedCompany = await findCompany({ "Account Number": parseInt(accountNumber) }, res);
+    if (updatedCompany) return res.json(updatedCompany);
   } catch (error) {
     handleError(res, error);
   }
 };
 
-// PUT Update the Balance for a specific company by Account Number (add/remove funds)
+// PUT Update the Balance for a specific company
 router.put("/companies/update-balance/:accountNumber", async (req, res) => {
-  try {
-    const accountNumber = parseInt(req.params.accountNumber);
-    const { amount } = req.body;
-    // Validate the amount
-    if (amount === undefined || isNaN(amount)) {
-      return res.status(400).json({ error: "A valid amount is required to update the balance" });
-    }
-    // Update the Balance by incrementing/decrementing it
-    const updateResult = await db.collection("Companies").updateOne(
-      { "Account Number": accountNumber }, // Find the company by Account Number
-      { $inc: { Balance: amount } } // Increment/decrement the Balance field
-    );
-    // If no company was found and updated, return a 404 error
-    if (updateResult.matchedCount === 0) {
-      return res.status(404).json({ error: "Company not found" });
-    }
-    // Retrieve the updated document to send back as a response
-    const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
-    // Return the updated company with the new Balance
-    res.json(updatedCompany); // Send the updated document in the response
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating the balance" });
+  const { amount } = req.body;
+  if (amount === undefined || isNaN(amount)) {
+    return res.status(400).json({ error: "A valid amount is required" });
   }
+  await updateField(req.params.accountNumber, { $inc: { Balance: amount } }, res);
 });
 
-
-// PUT Update the XP for a specific company by Account Number (add/remove XP)
+// PUT Update the XP for a specific company
 router.put("/companies/update-xp/:accountNumber", async (req, res) => {
-  try {
-    const accountNumber = parseInt(req.params.accountNumber);
-    const { xpAmount } = req.body;
-    // Validate the xpAmount
-    if (xpAmount === undefined || isNaN(xpAmount)) {
-      return res.status(400).json({ error: "A valid xpAmount is required to update the XP" });
-    }
-    // Update the XP for the company by Account Number
-    const updateResult = await db.collection("Companies").updateOne(
-      { "Account Number": accountNumber }, // Find the company by Account Number
-      { $inc: { XP: xpAmount } } // Increment/decrement the XP field
-    );
-    // If no company was found and updated, return a 404 error
-    if (updateResult.matchedCount === 0) {
-      return res.status(404).json({ error: "Company not found" });
-    }
-    // Retrieve the updated document to send back as a response
-    const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
-    // Return the updated company with the new XP
-    res.json(updatedCompany); // Send the updated document in the response
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "An error occurred while updating XP" });
+  const { xpAmount } = req.body;
+  if (xpAmount === undefined || isNaN(xpAmount)) {
+    return res.status(400).json({ error: "A valid xpAmount is required" });
   }
+  await updateField(req.params.accountNumber, { $inc: { XP: xpAmount } }, res);
 });
 
 // GET Streak for a specific company
 router.get("/companies/:accountNumber/streak", async (req, res) => {
-  const company = await findCompany(req.params.accountNumber, res);
+  const company = await findCompany({ "Account Number": parseInt(req.params.accountNumber) }, res);
   if (company && company.Streak !== undefined) {
     res.json({ Streak: company.Streak });
   } else {
-    res.status(404).json({ error: "Streak not found for this company" });
+    res.status(404).json({ error: "Streak not found" });
   }
 });
 
@@ -197,7 +134,7 @@ router.put("/companies/update-streak/:accountNumber", async (req, res) => {
   if (streakValue === undefined || isNaN(streakValue)) {
     return res.status(400).json({ error: "A valid streakValue is required" });
   }
-  await updateField(req.params.accountNumber, "Streak", streakValue, res);
+  await updateField(req.params.accountNumber, { $set: { Streak: streakValue } }, res);
 });
 
 module.exports = router;
