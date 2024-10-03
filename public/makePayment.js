@@ -262,3 +262,4 @@ function DisplayConfirmation(payeeName, paymentAmount, xpGained, streak, level) 
   document.getElementById("HomeButton").addEventListener("click", () => {
     window.location.href = 'home.html';
   });
+}
