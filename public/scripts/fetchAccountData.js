@@ -44,6 +44,7 @@ async function fetchAccountData() {
 
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
+            AccountNumber: `Account Number: ${companyData['Account Number']}`,
             Balance: `Balance: £${companyData['Balance'].toFixed(2)}`,
             Level: `Level: ${levelInfo.level}`,
             XP: `XP: ${XP}`
