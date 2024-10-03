@@ -147,7 +147,7 @@ function getBgColor(companyData) {
         (companyData['Sustainability Practices'] || 0);
 
     return combinedScore <= 9 ? 'bg-red-900' :
-           combinedScore <= 21 ? 'bg-orange-900' : 'bg-green-900';
+           combinedScore <= 21 ? 'bg-orange-700' : 'bg-green-900';
 }
 
 function Levels() {
