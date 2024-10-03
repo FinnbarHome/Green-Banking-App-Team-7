@@ -7,58 +7,86 @@
     <link href="./output.css" rel="stylesheet">
 </head>
 <body class="bg-gray-900">
+  <!-- Navbar with Hamburger Menu -->
   <nav class="bg-green-900">
-      <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
-        <div class="relative flex h-16 items-center justify-between">
-            <h1 class="flex flex-shrink-0 items-center text-white font-bold ml-3"> EcoCents</h1>
-              <div class="ml-6">
-                <div class="ml-6">
-                    <a href="home.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
-                    <a href="payment.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
-                    <a href="rewards.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
-                    <a href="login.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
-                </div>
-              </div>
-            </div>
-          </div>
+    <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+      <div class="relative flex h-16 items-center justify-between">
+        <h1 class="flex flex-shrink-0 items-center text-white font-bold ml-3">EcoCents</h1>
+
+        <!-- Hamburger Menu Button (always visible) -->
+        <div class="flex items-center">
+          <button id="menuToggle" class="text-white focus:outline-none">
+            <!-- Hamburger Icon -->
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+            </svg>
+          </button>
         </div>
-      </nav>
-    <div class="container my-5 mx-auto">
-      <div class="mx-5">
-        <div class="border-2 border-t-0 border-x-0 border-green-900">
-            <h1 class="text-3xl font-bold text-white mt-5 text-center">Your transaction with... </h1>
-            <h2 id="companyName" class="text-green-200 text-xl mb-4 font-bold text-center">{Company Name Here}</h2> <!-- Updated this line -->
-        </div>
-        <div class="mt-5 justify-center flex border-2 border-t-0 border-x-0 border-green-900">
-            <div class="grid grid-rows-2 grid-flow-col gap-1 mb-4">
-                <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4">Transaction Type:</h2>
-                <h2 class="bg-gray-600 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Carbon Emissions: </h2>
-                <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Waste Management: </h2>
-                <h2 class="bg-gray-600 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Sustainability Practices: </h2>
-                <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4 pb-3">Environmental Impact Score: </h2>
-                <h2 id="transactionType" class="row-start-1 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.1</h2>
-                <h2 id="carbEmissions" class="row-start-2 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-600">0.2</h2>
-                <h2 id="wasteManagement" class="row-start-3 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.3</h2>
-                <h2 id="sustainPractices" class="row-start-4 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-600">0.4</h2>
-                <h2 id="eiScore" class="row-start-5 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.5</h2>
-            </div>
-        </div>
-        <h1 class="text-2xl font-bold text-white mt-5 text-center">Your final RAG Rating is <span id="ragRating">RED.</span></h1>
-        <h2 class="text-xl mb-4 text-white text-center">Recommendations for you: </h2>
+      </div>
+
+      <!-- Mobile Menu (hidden by default, toggled by hamburger) -->
+      <div id="mobileMenu" class="hidden">
+        <a href="home.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
+        <a href="payment.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
+        <a href="rewards.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
+        <a href="login.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
+      </div>
     </div>
-    <div id="alternatives">
-      
+  </nav>
+
+  <div class="container my-5 mx-auto">
+    <div class="mx-5">
+      <div class="border-2 border-t-0 border-x-0 border-green-900">
+        <h1 class="text-3xl font-bold text-white mt-5 text-center">Your transaction with... </h1>
+        <h2 id="companyName" class="text-green-200 text-xl mb-4 font-bold text-center">{Company Name Here}</h2> <!-- Updated this line -->
+      </div>
+      <div class="mt-5 justify-center flex border-2 border-t-0 border-x-0 border-green-900">
+        <div class="grid grid-rows-2 grid-flow-col gap-1 mb-4">
+          <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4">Transaction Type:</h2>
+          <h2 class="bg-gray-600 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Carbon Emissions: </h2>
+          <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Waste Management: </h2>
+          <h2 class="bg-gray-600 text-xl font-bold text-white px-5 rounded-l-lg py-4">Company's Sustainability Practices: </h2>
+          <h2 class="bg-gray-700 text-xl font-bold text-white px-5 rounded-l-lg py-4 pb-3">Environmental Impact Score: </h2>
+          <h2 id="transactionType" class="row-start-1 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.1</h2>
+          <h2 id="carbEmissions" class="row-start-2 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-600">0.2</h2>
+          <h2 id="wasteManagement" class="row-start-3 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.3</h2>
+          <h2 id="sustainPractices" class="row-start-4 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-600">0.4</h2>
+          <h2 id="eiScore" class="row-start-5 text-xl text-white px-5 py-4 rounded-r-lg bg-gray-700">0.5</h2>
+        </div>
+      </div>
+      <h1 class="text-2xl font-bold text-white mt-5 text-center">Your final RAG Rating is <span id="ragRating">RED.</span></h1>
+      <h2 class="text-xl mb-4 text-white text-center">Recommendations for you: </h2>
     </div>
+    <div id="alternatives"></div>
   </div>
-  <footer class="bg-green-900">
-    <div class="mx-auto p-4 text-center">
-      <h1 class="text-gray-400">© 2024</h1>
+
+  <!-- Footer -->
+  <footer class="bg-green-900 mt-auto">
+    <div class="mx-auto p-4 text-center items-center justify-between">
+      <h1 class="text-gray-400">© 2024 EcoCents</h1>
+      <!-- Light Mode Toggle Button Moved to Footer -->
+      <button id="themeToggle" class="mt-4 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
+        Toggle Light Mode
+      </button>
     </div>
-    <script src="main.js"></script>
   </footer>
 
+  <!-- Script to handle menu toggling -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const menuToggle = document.getElementById('menuToggle');
+      const mobileMenu = document.getElementById('mobileMenu');
+
+      menuToggle.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+    });
+  </script>
+
+
   <script src="scripts/companyAnalysis.js"></script>
-  <!-- Script to handle checking admin privlidges -->
   <script src="scripts/checkAdminPrivileges.js"></script>
+  <!-- Script to handle checking dark mode, light mode button -->
+  <script src="scripts/darkLightButton.js"></script>
 </body>
 </html>

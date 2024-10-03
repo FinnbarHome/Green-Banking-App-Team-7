@@ -31,27 +31,27 @@ async function checkAdminStatus() {
             // Get the current page URL
             const currentPage = window.location.pathname.split('/').pop();
 
-            // Find the navbar div that contains links
-            const navbarDiv = document.querySelector('nav .flex-nowrap');
+            // Find the mobile menu element
+            const mobileMenu = document.getElementById('mobileMenu');
 
-            // Check if the "Admin" link already exists in the navbar
-            let adminLink = navbarDiv.querySelector('a[href="admin.html"]');
-            
-            if (!adminLink) {
-                // Create a new "admin.html" link if it doesn't exist
-                adminLink = document.createElement('a');
-                adminLink.href = 'admin.html';
-                adminLink.classList = 'rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white';
-                adminLink.textContent = 'Admin';
+            // Check if the "Admin" link already exists in the mobile menu
+            let mobileAdminLink = mobileMenu.querySelector('a[href="admin.html"]');
 
-                // Insert the admin link in the correct position (after "Rewards" but before "Sign Out")
-                navbarDiv.insertBefore(adminLink, navbarDiv.querySelector('a[href="login.html"]'));
+            if (!mobileAdminLink) {
+                // Create a new "admin.html" link if it doesn't exist for the mobile menu
+                mobileAdminLink = document.createElement('a');
+                mobileAdminLink.href = 'admin.html';
+                mobileAdminLink.classList = 'block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white';
+                mobileAdminLink.textContent = 'Admin';
+
+                // Insert the admin link before the "Sign Out" link in the mobile menu
+                mobileMenu.insertBefore(mobileAdminLink, mobileMenu.querySelector('a[href="login.html"]'));
             }
 
-            // If the current page is "admin.html", highlight the "Admin" link
+            // If the current page is "admin.html", highlight the "Admin" link in the mobile menu
             if (currentPage === 'admin.html') {
-                adminLink.classList.remove('text-gray-400');
-                adminLink.classList.add('bg-black', 'text-white');
+                mobileAdminLink.classList.remove('text-gray-400');
+                mobileAdminLink.classList.add('bg-black', 'text-white');
             }
         }
     } catch (error) {
