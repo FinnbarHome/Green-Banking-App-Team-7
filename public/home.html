@@ -49,7 +49,7 @@
             <!-- Transaction History Section -->
             <h1 class="text-xl font-bold text-white mt-5 text-center mb-4">Your Transaction History</h1>
             <div id="pastPayments" class="mt-5 mb-5 border-green-800 border-2 border-t-0 border-x-0">
-              <p class="bg-orange-900"></p>
+              <p class="bg-orange-700"></p>
               <p class="bg-red-900"></p>
                 <!-- Transaction entries will be dynamically added here by JavaScript -->
             </div>
@@ -65,60 +65,59 @@
 
     <!-- Script to fetch and display account and transaction data -->
     <script src="fetchAccountData.js"></script>
+    <!-- Script to handle checking admin privlidges -->
+    <script src="checkAdminPrivileges.js"></script>
 </body>
 </html>
 
 <script>
 
-function Levels() {
-    const power = 2.5;
-    const denominator = 0.3;
-    const levelBounds = [];
-  
-    for (let i = 0; i < 11; i++) {
-      let bounds = i / denominator;
-      bounds = Math.pow(bounds, power);
-      levelBounds[i] = Math.round(bounds);
-    }
-    return levelBounds;
-  }
+function calculateUserLevel(userXP) {
+  const levelBounds = Levels();
+  let level = 0, PreviousLevelXP = 0, NextLevelXP = 0;
 
-
-  function calculateUserLevel(userXP) {
-    const levelBounds = Levels();
-    let level = 0;
-    let NextLevel = 0;
-    let PreviousLevel = 0;
-    let progressPercentage = 0;
-  
-    for (let i = 0; i < levelBounds.length; i++) {
-      if (userXP >= levelBounds[i]) {
-        level = i + 1;
-        PreviousLevel = levelBounds[i];
-        if (i + 1 < levelBounds.length) {
-          NextLevel = levelBounds[i + 1];
-        } else {
-          NextLevel = levelBounds[i];
-        }
-      } else {
-        NextLevel = levelBounds[i];
-        break;
-      }
-    }
-  
-    if (level < levelBounds.length) {
-      let xpForNextLevel = NextLevel - PreviousLevel;
-      let currentLevelProgress = userXP - PreviousLevel;
-      progressPercentage = (currentLevelProgress / xpForNextLevel) * 100;
+  for (let i = 0; i < levelBounds.length; i++) {
+    if (userXP >= levelBounds[i]) {
+      level = i + 1;
+      PreviousLevelXP = levelBounds[i];
+      NextLevelXP = (i + 1 < levelBounds.length) ? levelBounds[i + 1] : levelBounds[i];
     } else {
-      progressPercentage = 100;
+      NextLevelXP = levelBounds[i];
+      break;
     }
-  
-    return {
-      level: level,
-      progressPercentage: Math.round(progressPercentage * 100) / 100,
-      currentXP: userXP,
-      nextLevelXP: NextLevel
-    };
   }
+
+  level = Math.min(level, 10);
+
+  let progressPercentage;
+  if (level === 10) {
+    const maxXP = levelBounds[levelBounds.length - 1];
+    const level9XP = levelBounds[levelBounds.length - 2];
+    const xpAboveLevel9 = Math.min(userXP, maxXP) - level9XP;
+    const xpForLevel10 = maxXP - level9XP;
+    progressPercentage = (xpAboveLevel9 / xpForLevel10) * 100;
+  } else {
+    const xpForNextLevel = NextLevelXP - PreviousLevelXP;
+    const xpProgress = userXP - PreviousLevelXP;
+    progressPercentage = (xpProgress / xpForNextLevel) * 100;
+  }
+
+  progressPercentage = Math.min(progressPercentage, 100);
+
+  return {
+    level,
+    progressPercentage: Math.round(progressPercentage * 100) / 100,
+    currentXP: userXP,
+    nextLevelXP: NextLevelXP
+  };
+}
+
+function Levels() {
+  const power = 2.5, denominator = 0.3, levelBounds = [];
+  for (let i = 0; i < 10; i++) {
+    levelBounds[i] = Math.round(Math.pow(i / denominator, power));
+  }
+  return levelBounds;
+}
+
 </script>
