@@ -4,22 +4,31 @@ async function handlePayment(event) {
   event.preventDefault(); // Prevent form from submitting
 
   try {
+    // Get values from form
     const paymentAmount = parseFloat(document.getElementById("payment-amount").value);
     const payeeName = document.getElementById("payee-name").value;
     const paymentReference = document.getElementById("payment-reference").value;
+    const enteredPayeeAccountNumber = parseInt(document.getElementById("payee-account-number").value); // Capture entered account number
 
-    validateInput(payeeName, paymentAmount);
+    validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber); // Include payee account number in validation
 
+    // Fetch payee data by name
     const payeeData = await fetchCompanyDataByName(payeeName);
-    const payeeAccountNumber = payeeData["Account Number"];
-    const EIS = calculateEIS(payeeData);
+    const payeeAccountNumberFromDB = payeeData["Account Number"];
 
+    // Compare entered payee account number with the one in the database
+    if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
+      throw new Error("Entered account number does not match the account number associated with the payee.");
+    }
+
+    // Calculate EIS, fetch payer data, and proceed with payment process
+    const EIS = calculateEIS(payeeData);
     const payerAccountNumber = getPayerAccountNumber();
     const payerData = await fetchCompanyDataByAccount(payerAccountNumber);
 
     const { streak, updatedEIS } = calculateStreakAndEIS(EIS, payerData);
 
-    await processPayment(payerAccountNumber, payeeAccountNumber, paymentAmount, paymentReference, updatedEIS);
+    await processPayment(payerAccountNumber, payeeAccountNumberFromDB, paymentAmount, paymentReference, updatedEIS);
 
     await updateUserXPAndStreak(payerAccountNumber, streak, updatedEIS, paymentAmount);
 
@@ -51,9 +60,11 @@ async function handlePayment(event) {
 
 // Helper functions
 
-function validateInput(payeeName, paymentAmount) {
+// Validates payment inputs
+function validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber) {
   if (!payeeName) throw new Error("Payee name is required");
   if (isNaN(paymentAmount) || paymentAmount <= 0) throw new Error("Invalid payment amount");
+  if (!enteredPayeeAccountNumber) throw new Error("Payee account number is required");
 }
 
 async function fetchCompanyDataByName(name) {
@@ -199,7 +210,8 @@ function calculateUserLevel(userXP) {
     level,
     progressPercentage: Math.round(progressPercentage * 100) / 100,
     currentXP: userXP,
-    nextLevelXP: NextLevelXP
+    nextLevelXP:
+ NextLevelXP
   };
 }
 
@@ -250,4 +262,3 @@ function DisplayConfirmation(payeeName, paymentAmount, xpGained, streak, level) 
   document.getElementById("HomeButton").addEventListener("click", () => {
     window.location.href = 'home.html';
   });
-}
