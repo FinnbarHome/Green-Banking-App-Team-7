@@ -19,6 +19,7 @@ async function handlePayment(event) {
     // Compare entered payee account number with the one in the database
     if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
       alert("Entered account number does not match the account number associated with the payee.");
+      throw new Error("Entered account number does not match the account number associated with the payee.");
     }
 
     // Calculate EIS, fetch payer data, and proceed with payment process
