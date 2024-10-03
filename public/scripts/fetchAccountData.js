@@ -141,15 +141,17 @@ async function prepareTransactionData(transaction, accountNumber, companyCache) 
 
     return { isOutgoing, amount, transactionDate, companyName, bgColor };
 }
-
 function getBgColor(companyData) {
-    const combinedScore = (companyData['Carbon Emissions'] || 0) +
-        (companyData['Waste Management'] || 0) +
-        (companyData['Sustainability Practices'] || 0);
+    const combinedScore = (companyData['Carbon Emissions'] || 0) + (companyData['Waste Management'] || 0) + (companyData['Sustainability Practices'] || 0);
+
+    if (combinedScore === 0) {
+        return 'bg-blue-700'; // Return white background for a combined score of 0
+    } else {
 
     return combinedScore <= 9 ? 'bg-red-900' :
-           combinedScore <= 21 ? 'bg-orange-700' : 'bg-green-900';
-}
+           combinedScore <= 21 ? 'bg-orange-700' : 'bg-green-900'; 
+    };
+} 
 
 function Levels() {
     const power = 2.5;
