@@ -3,27 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="./output.css" rel="stylesheet"> <!-- Assuming Tailwind CSS is used -->
+    <link href="./output.css" rel="stylesheet"> 
     <title>EcoCents - Home</title>
 </head>
 <body class="bg-gray-900 flex flex-col min-h-screen">
-    <!-- Navigation Bar -->
+    <!-- Navigation Bar with Hamburger Menu -->
     <nav class="bg-green-900">
         <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
             <div class="relative flex h-16 items-center justify-between">
                 <h1 class="flex flex-shrink-0 items-center text-white font-bold ml-3">EcoCents</h1>
-                <div class="ml-6 flex flex-nowrap">
-                    <a href="home.html" class="rounded bg-black text-white px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
-                    <a href="payment.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
-                    <a href="rewards.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
-                    <a href="login.html" class="rounded px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
+
+                <!-- Hamburger Menu Button (always visible) -->
+                <div class="flex items-center">
+                    <button id="menuToggle" class="text-white focus:outline-none">
+                        <!-- Hamburger Icon -->
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
                 </div>
+            </div>
+
+            <!-- Mobile Menu (hidden by default, toggled by hamburger) -->
+            <div id="mobileMenu" class="hidden">
+                <a href="home.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
+                <a href="payment.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
+                <a href="rewards.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
+                <a href="login.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
             </div>
         </div>
     </nav>
 
     <!-- Main Container -->
-    <div class="container my-5 mx-auto flex-grow"> <!-- Added flex-grow to take up the remaining space -->
+    <div class="container my-5 mx-auto flex-grow">
         <div class="mx-5 lg:mx-60">
             <h1 class="text-3xl font-bold text-white mt-5 text-center mb-4">Account</h1>
             
@@ -41,8 +53,6 @@
                         <h2 id="Balance" class="text-white">Account Balance:</h2>
                         <h2 id="Level" class="text-white">Level:</h2>
                         <h2 id="XP" class="text-white">XP Level:</h2>
-
-
                     </div>
                 </div>
             </div>
@@ -50,75 +60,36 @@
             <!-- Transaction History Section -->
             <h1 class="text-xl font-bold text-white mt-5 text-center mb-4">Your Transaction History</h1>
             <div id="pastPayments" class="mt-5 mb-5 border-green-800 border-2 border-t-0 border-x-0">
-              <p class="bg-orange-700"></p>
-              <p class="bg-red-900"></p>
-                <!-- Transaction entries will be dynamically added here by JavaScript -->
+                <p class="bg-orange-700"></p>
+                <p class="bg-red-900"></p>
+                <!-- Transaction entries will be dynamically added here -->
             </div>
         </div>
     </div>
 
     <!-- Footer -->
-    <footer class="bg-green-900 mt-auto"> <!-- Added mt-auto to push the footer down -->
+    <footer class="bg-green-900 mt-auto">
         <div class="mx-auto p-4 text-center">
             <h1 class="text-gray-400">© 2024 EcoCents</h1>
         </div>
     </footer>
 
+    <!-- Script to handle menu toggling -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+
     <!-- Script to fetch and display account and transaction data -->
     <script src="scripts/fetchAccountData.js"></script>
-    <!-- Script to handle checking admin privlidges -->
+    <!-- Script to handle checking admin privileges -->
     <script src="scripts/checkAdminPrivileges.js"></script>
+    <script src="scripts/levelingForHome.js"></script>
 </body>
 </html>
-
-<script>
-
-function calculateUserLevel(userXP) {
-  const levelBounds = Levels();
-  let level = 0, PreviousLevelXP = 0, NextLevelXP = 0;
-
-  for (let i = 0; i < levelBounds.length; i++) {
-    if (userXP >= levelBounds[i]) {
-      level = i + 1;
-      PreviousLevelXP = levelBounds[i];
-      NextLevelXP = (i + 1 < levelBounds.length) ? levelBounds[i + 1] : levelBounds[i];
-    } else {
-      NextLevelXP = levelBounds[i];
-      break;
-    }
-  }
-
-  level = Math.min(level, 10);
-
-  let progressPercentage;
-  if (level === 10) {
-    const maxXP = levelBounds[levelBounds.length - 1];
-    const level9XP = levelBounds[levelBounds.length - 2];
-    const xpAboveLevel9 = Math.min(userXP, maxXP) - level9XP;
-    const xpForLevel10 = maxXP - level9XP;
-    progressPercentage = (xpAboveLevel9 / xpForLevel10) * 100;
-  } else {
-    const xpForNextLevel = NextLevelXP - PreviousLevelXP;
-    const xpProgress = userXP - PreviousLevelXP;
-    progressPercentage = (xpProgress / xpForNextLevel) * 100;
-  }
-
-  progressPercentage = Math.min(progressPercentage, 100);
-
-  return {
-    level,
-    progressPercentage: Math.round(progressPercentage * 100) / 100,
-    currentXP: userXP,
-    nextLevelXP: NextLevelXP
-  };
-}
-
-function Levels() {
-  const power = 2.5, denominator = 0.3, levelBounds = [];
-  for (let i = 0; i < 10; i++) {
-    levelBounds[i] = Math.round(Math.pow(i / denominator, power));
-  }
-  return levelBounds;
-}
-
-</script>
