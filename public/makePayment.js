@@ -4,43 +4,51 @@ async function handlePayment(event) {
   event.preventDefault(); // Prevent form from submitting
 
   try {
+    // Get values from form
     const paymentAmount = parseFloat(document.getElementById("payment-amount").value);
     const payeeName = document.getElementById("payee-name").value;
     const paymentReference = document.getElementById("payment-reference").value;
+    const enteredPayeeAccountNumber = parseInt(document.getElementById("payee-account-number").value); // Capture entered account number
 
-    validateInput(payeeName, paymentAmount);
+    validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber); // Include payee account number in validation
 
+    // Fetch payee data by name
     const payeeData = await fetchCompanyDataByName(payeeName);
-    const payeeAccountNumber = payeeData["Account Number"];
-    const EIS = calculateEIS(payeeData);
+    const payeeAccountNumberFromDB = payeeData["Account Number"];
 
+    // Compare entered payee account number with the one in the database
+    if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
+      throw new Error("Entered account number does not match the account number associated with the payee.");
+    }
+
+    // Calculate EIS, fetch payer data, and proceed with payment process
+    const EIS = calculateEIS(payeeData);
     const payerAccountNumber = getPayerAccountNumber();
     const payerData = await fetchCompanyDataByAccount(payerAccountNumber);
 
     const { streak, updatedEIS } = calculateStreakAndEIS(EIS, payerData);
 
-    await processPayment(payerAccountNumber, payeeAccountNumber, paymentAmount, paymentReference, updatedEIS);
+    await processPayment(payerAccountNumber, payeeAccountNumberFromDB, paymentAmount, paymentReference, updatedEIS);
 
     await updateUserXPAndStreak(payerAccountNumber, streak, updatedEIS, paymentAmount);
 
-    // **FETCH UPDATED PAYER DATA HERE**
+    // Fetch updated payer data
     const updatedPayerData = await fetchCompanyDataByAccount(payerAccountNumber);
 
-    // **Calculate XP gain for confirmation using updated data**
+    // Calculate XP gain and update UI with confirmation
     const XPGain = Math.round(updatedEIS * paymentAmount);
-
-    // **Recalculate the user's level after the transaction**
     const updatedLevelInfo = calculateUserLevel(updatedPayerData["XP"]);
 
-    // **Display confirmation with the updated values**
     DisplayConfirmation(payeeName, paymentAmount, XPGain, streak, updatedLevelInfo["level"]);
 
-    // **Calculate and update the progress bar using the updated XP and level**
+    // Update progress bar
     const progressPercentage = Math.round((updatedPayerData["XP"] / updatedLevelInfo.nextLevelXP) * 100);
     document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
 
   } catch (error) {
-    if (error.message.includes("Company not found")) {
+    if (error.message.includes("Entered account number does not match")) {
+      alert("The entered account number does not match the one associated with the payee. Please verify and try again.");
+    } else if (error.message.includes("Company not found")) {
       alert("The payee name you entered does not exist. Please check and try again."); // User-friendly message
     } else {
       console.error("An error occurred during the payment process:", error);
@@ -50,13 +58,13 @@ async function handlePayment(event) {
 }
 
 
-
 // Helper functions
 
 // Validates payment inputs
-function validateInput(payeeName, paymentAmount) {
+function validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber) {
   if (!payeeName) throw new Error("Payee name is required");
   if (isNaN(paymentAmount) || paymentAmount <= 0) throw new Error("Invalid payment amount");
+  if (!enteredPayeeAccountNumber) throw new Error("Payee account number is required");
 }
 
 // Fetch company data by name
@@ -206,7 +214,8 @@ function calculateUserLevel(userXP) {
     level,
     progressPercentage: Math.round(progressPercentage * 100) / 100, // Round to two decimals
     currentXP: userXP,
-    nextLevelXP: NextLevelXP
+    nextLevelXP:
+ NextLevelXP
   };
 }
 
@@ -259,4 +268,3 @@ function DisplayConfirmation(payeeName, paymentAmount, xpGained, streak, level) 
   });
 
 }
-
