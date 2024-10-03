@@ -15,6 +15,7 @@ async function handlePayment(event) {
     // Fetch payee data by name
     const payeeData = await fetchCompanyDataByName(payeeName);
     const payeeAccountNumberFromDB = payeeData["Account Number"];
+    const payeeSpendingCategory = payeeData["Spending Category"]; // Get the spending category
 
     // Compare entered payee account number with the one in the database
     if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
@@ -27,7 +28,9 @@ async function handlePayment(event) {
     const payerAccountNumber = getPayerAccountNumber();
     const payerData = await fetchCompanyDataByAccount(payerAccountNumber);
 
-    const { streak, updatedEIS } = calculateStreakAndEIS(EIS, payerData);
+    // Only calculate the streak if the payee's Spending Category is not "User"
+    const shouldUpdateStreak = payeeSpendingCategory !== "User";
+    const { streak, updatedEIS } = calculateStreakAndEIS(EIS, payerData, shouldUpdateStreak);
 
     await processPayment(payerAccountNumber, payeeAccountNumberFromDB, paymentAmount, paymentReference, updatedEIS);
 
@@ -93,7 +96,7 @@ function calculateEIS({ "Carbon Emissions": CE = 0, "Waste Management": WM = 0, 
   return (CE + WM + SP) / 30;
 }
 
-function calculateStreakAndEIS(EIS, payerData) {
+function calculateStreakAndEIS(EIS, payerData, shouldUpdateStreak) {
   const greenThreshold = 0.7;
   const redThreshold = 0.3;
   const streakMultiplier = 0.1;
@@ -103,7 +106,9 @@ function calculateStreakAndEIS(EIS, payerData) {
   let isGreenTransaction = EIS >= greenThreshold;
   let isRedTransaction = EIS <= redThreshold;
 
-  streak = isGreenTransaction ? (streak < 0 ? 1 : streak + 1) : isRedTransaction ? (streak > 0 ? -1 : streak - 1) : 0;
+  if (shouldUpdateStreak) { // Only update the streak if the condition is met
+    streak = isGreenTransaction ? (streak < 0 ? 1 : streak + 1) : isRedTransaction ? (streak > 0 ? -1 : streak - 1) : 0;
+  }
 
   const greenStreak = Math.max(0, streak);
   const redStreak = Math.abs(Math.min(0, streak));
