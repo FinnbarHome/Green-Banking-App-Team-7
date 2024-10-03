@@ -61,9 +61,13 @@
   </div>
 
   <!-- Footer -->
-  <footer class="bg-green-900">
-    <div class="mx-auto p-4 text-center">
-      <h1 class="text-gray-400">© 2024</h1>
+  <footer class="bg-green-900 mt-auto">
+    <div class="mx-auto p-4 text-center items-center justify-between">
+      <h1 class="text-gray-400">© 2024 EcoCents</h1>
+      <!-- Light Mode Toggle Button Moved to Footer -->
+      <button id="themeToggle" class="mt-4 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
+        Toggle Light Mode
+      </button>
     </div>
   </footer>
 
@@ -82,5 +86,7 @@
 
   <script src="scripts/companyAnalysis.js"></script>
   <script src="scripts/checkAdminPrivileges.js"></script>
+  <!-- Script to handle checking dark mode, light mode button -->
+  <script src="scripts/darkLightButton.js"></script>
 </body>
 </html>
