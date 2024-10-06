@@ -3,19 +3,16 @@ const mongoose = require('mongoose');
 const app = require('../server');  // Import the Express app
 
 beforeAll(async () => {
-  // Connect to your actual MongoDB database using the MONGO_URI from your .env file
   const uri = process.env.MONGO_URI;
   await mongoose.connect(uri);
 });
 
 afterAll(async () => {
-  // Clean up the database connection after all tests are done
   await mongoose.connection.close();  // Make sure the connection is closed properly
 });
 
 describe('GET /api/companies/:accountNumber', () => {
   beforeEach(async () => {
-    // Seed your actual MongoDB with test data before each test
     const company = {
       "_id": new mongoose.Types.ObjectId("66ed59116e6aaadef851b73c"),
       "Company Name": "RedFuel Services",
@@ -33,7 +30,6 @@ describe('GET /api/companies/:accountNumber', () => {
   });
 
   afterEach(async () => {
-    // Clear the collections after each test
     await mongoose.connection.collection('Companies').deleteMany({});
   });
 
@@ -43,7 +39,7 @@ describe('GET /api/companies/:accountNumber', () => {
     const response = await request(app).get('/api/companies/1');
     
     const end = Date.now();
-    const responseTime = end - start;  // Response time in milliseconds
+    const responseTime = end - start;  
     
     console.log(`Response time: ${responseTime}ms`);
     
@@ -61,7 +57,7 @@ describe('GET /api/companies/:accountNumber', () => {
       "XP": expect.any(Number),
       "Streak": expect.any(Number)
     });
-    expect(responseTime).toBeLessThan(500);  // Ensure response time is < 500ms
+    expect(responseTime).toBeLessThan(500); 
   });
 
   it('should return 404 when the company is not found', async () => {
