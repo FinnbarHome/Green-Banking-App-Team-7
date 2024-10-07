@@ -2,15 +2,15 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const db = mongoose.connection;
-const { notifyClient } = require('../websocket');
+const { notifyClient } = require('../websocket'); 
 
-// Utility function to handle errors
+// Func to handle errors
 const handleError = (res, error, status = 500, message = "An error occurred") => {
   console.error(error);
   res.status(status).json({ error: message });
 };
 
-// Utility function to validate if both recipient and sender exist
+// Func to validate if both recipient and sender exist
 const validateAccounts = async (Recipient, Sender, res) => {
   try {
     const recipientExists = await db.collection("Companies").findOne({ "Account Number": Recipient });
@@ -68,7 +68,7 @@ router.get("/transactions", async (req, res) => {
   }
 });
 
-// GET View transactions by recipient or sender, sorted by date (newest first)
+// GET View transactions by recipient or sender, sorted by date
 router.get("/transactions/:accountNumber", async (req, res) => {
   try {
     const accountNumber = parseInt(req.params.accountNumber);

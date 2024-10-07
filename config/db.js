@@ -5,12 +5,12 @@ const connectDB = async () => {
         const uri = process.env.MONGO_URI;
         await mongoose.connect(uri);
 
-        // Only log when not in the test environment
+        // Only log when not in the test env
         if (process.env.NODE_ENV !== 'test') {
             console.log("Connected to the database");
         }
 
-        // Handle connection loss and reconnection, but only if not in a test environment
+        // Handle connection loss and reconnection, only if not in a test env
         if (process.env.NODE_ENV !== 'test') {
             mongoose.connection.on('disconnected', () => {
                 console.error("MongoDB disconnected. Attempting to reconnect...");

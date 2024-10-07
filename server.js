@@ -10,7 +10,7 @@ const apiRoutes = require('./routes/api');
 const discountsRoutes = require("./routes/discounts");
 const transactionsRoutes = require("./routes/transactions");
 const path = require('path');
-const { setupWebSocket } = require('./websocket');
+const { setupWebSocket } = require('./websocket'); 
 
 const app = express();
 
@@ -23,17 +23,17 @@ requiredEnvVars.forEach((key) => {
     }
 });
 
-// Middleware for security and performance
-// app.use(helmet());
-app.use(cors()); 
-app.use(express.json());
-app.use(compression());
-app.use(morgan('combined'));
+// Middleware
+// app.use(helmet()); // Adds secure HTTP headers - Doesn't work on AWS, had to remove
+app.use(cors()); // Enable CORS
+app.use(express.json()); // Parse incoming JSON requests
+app.use(compression()); // Compress responses
+app.use(morgan('combined')); // HTTP request logger
 
-// Rate limiting to prevent abuse
+// Rate limiting
 const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000,
-    max: 250,
+    windowMs: 60 * 60 * 1000, // 60 minutes in ms
+    max: 250, // Limit each ip to 250 req
     message: "Too many requests, please try again later.",
 });
 app.use(limiter);
@@ -41,7 +41,7 @@ app.use(limiter);
 // Serve static files from the public folder
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Establish Database Connection and start server
+// Establish Db Connection and start server
 connectDB()
     .then(() => {
         const PORT = process.env.PORT || 3000;
@@ -49,8 +49,8 @@ connectDB()
             console.log(`API server listening on port ${PORT}!`);
         });
 
-        // Initialize WebSocket server
-        setupWebSocket(server);
+        // Init WebSocket server
+        setupWebSocket(server); 
     })
     .catch((error) => {
         console.error("ERROR: Database connection failed", error);
@@ -67,7 +67,7 @@ app.get('/', (req, res) => {
     res.send("Hello World!");
 });
 
-// Fallback for Single Page Application (SPA) routing
+// Fallback for SPA routing
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'login.html'));
 });
@@ -77,13 +77,13 @@ app.use((req, res, next) => {
     res.status(404).json({ error: "Resource not found" });
 });
 
-// Generic Error Handler for all uncaught errors
+// Error Handler for all uncaught errors
 app.use((error, req, res, next) => {
     console.error("ERROR:", error.stack);
     res.status(500).json({ error: "Internal Server Error" });
 });
 
-// Graceful shutdown function
+// Graceful shutdown func
 const gracefulShutdown = (signal, server) => {
     console.log(`Received ${signal}. Shutting down gracefully...`);
     server.close(() => {
@@ -92,4 +92,4 @@ const gracefulShutdown = (signal, server) => {
     });
 };
 
-module.exports = app;
+module.exports = app; // Import for use in supertests etc etc

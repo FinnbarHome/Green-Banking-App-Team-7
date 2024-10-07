@@ -1,6 +1,6 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server');  // Import the Express app
+const app = require('../server');  
 
 beforeAll(async () => {
   const uri = process.env.MONGO_URI;
@@ -8,7 +8,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  // Close the database connection after all tests are done
+  // Close the db connection after all tests are done
   await mongoose.connection.close();
 });
 
@@ -18,7 +18,7 @@ describe('GET /api/companies/:accountNumber', () => {
     const existingCompany = await mongoose.connection.collection('Companies').findOne({ "Account Number": 1 });
 
     if (!existingCompany) {
-      // Insert the document only if it doesn't already exist
+      // Insert the doc only if it doesn't already exist
       const company = {
         "Company Name": "RedFuel Services",
         "Spending Category": "Fuel",
@@ -47,7 +47,6 @@ describe('GET /api/companies/:accountNumber', () => {
     
     expect(response.status).toBe(200);
 
-    // Using expect.objectContaining to ignore the _id field and match the rest
     expect(response.body).toEqual(expect.objectContaining({
       "Company Name": "RedFuel Services",
       "Spending Category": "Fuel",
