@@ -107,7 +107,7 @@ const updateField = async (accountNumber, field, value, res) => {
   try {
     const updateResult = await db.collection("Companies").updateOne(
       { "Account Number": parseInt(accountNumber) },
-      { $set: { [field]: value } } // Change from $inc to $set for direct field value setting
+      { $set: { [field]: value } }
     );
 
     if (updateResult.matchedCount === 0) {
@@ -135,17 +135,20 @@ router.put("/companies/update-balance/:accountNumber", async (req, res) => {
     }
     // Update the Balance by incrementing/decrementing it
     const updateResult = await db.collection("Companies").updateOne(
-      { "Account Number": accountNumber }, // Find the company by Account Number
-      { $inc: { Balance: amount } } // Increment/decrement the Balance field
+      { "Account Number": accountNumber },
+      { $inc: { Balance: amount } }
     );
+
     // If no company was found and updated, return a 404 error
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
+
     // Retrieve the updated document to send back as a response
     const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+
     // Return the updated company with the new Balance
-    res.json(updatedCompany); // Send the updated document in the response
+    res.json(updatedCompany);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "An error occurred while updating the balance" });
@@ -158,23 +161,28 @@ router.put("/companies/update-xp/:accountNumber", async (req, res) => {
   try {
     const accountNumber = parseInt(req.params.accountNumber);
     const { xpAmount } = req.body;
+
     // Validate the xpAmount
     if (xpAmount === undefined || isNaN(xpAmount)) {
       return res.status(400).json({ error: "A valid xpAmount is required to update the XP" });
     }
+
     // Update the XP for the company by Account Number
     const updateResult = await db.collection("Companies").updateOne(
-      { "Account Number": accountNumber }, // Find the company by Account Number
-      { $inc: { XP: xpAmount } } // Increment/decrement the XP field
+      { "Account Number": accountNumber },
+      { $inc: { XP: xpAmount } }
     );
+
     // If no company was found and updated, return a 404 error
     if (updateResult.matchedCount === 0) {
       return res.status(404).json({ error: "Company not found" });
     }
+
     // Retrieve the updated document to send back as a response
     const updatedCompany = await db.collection("Companies").findOne({ "Account Number": accountNumber });
+
     // Return the updated company with the new XP
-    res.json(updatedCompany); // Send the updated document in the response
+    res.json(updatedCompany);
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "An error occurred while updating XP" });

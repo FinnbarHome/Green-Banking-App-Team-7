@@ -10,7 +10,7 @@ const apiRoutes = require('./routes/api');
 const discountsRoutes = require("./routes/discounts");
 const transactionsRoutes = require("./routes/transactions");
 const path = require('path');
-const { setupWebSocket } = require('./websocket'); // Import the WebSocket setup function
+const { setupWebSocket } = require('./websocket');
 
 const app = express();
 
@@ -24,16 +24,16 @@ requiredEnvVars.forEach((key) => {
 });
 
 // Middleware for security and performance
-// app.use(helmet()); // Adds secure HTTP headers
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse incoming JSON requests
-app.use(compression()); // Compress responses
-app.use(morgan('combined')); // HTTP request logger
+// app.use(helmet());
+app.use(cors()); 
+app.use(express.json());
+app.use(compression());
+app.use(morgan('combined'));
 
 // Rate limiting to prevent abuse
 const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 15 minutes
-    max: 250, // Limit each IP to 5000 requests per `windowMs`
+    windowMs: 60 * 60 * 1000,
+    max: 250,
     message: "Too many requests, please try again later.",
 });
 app.use(limiter);
@@ -50,7 +50,7 @@ connectDB()
         });
 
         // Initialize WebSocket server
-        setupWebSocket(server); // Use the WebSocket setup function
+        setupWebSocket(server);
     })
     .catch((error) => {
         console.error("ERROR: Database connection failed", error);
@@ -92,4 +92,4 @@ const gracefulShutdown = (signal, server) => {
     });
 };
 
-module.exports = app; // For using in tests
+module.exports = app;
