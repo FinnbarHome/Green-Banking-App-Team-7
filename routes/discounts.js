@@ -3,13 +3,13 @@ const router = express.Router();
 const mongoose = require("mongoose");
 const db = mongoose.connection;
 
-// Utility function to handle errors
+// Func to handle errors
 const handleError = (res, error, status = 500, message = "An error occurred") => {
   console.error(error);
   res.status(status).json({ error: message });
 };
 
-// Utility function to find a discount by DiscountID
+// Func to find a discount by DiscountID
 const findDiscount = async (discountID, res) => {
   try {
     const discount = await db.collection("Discounts").findOne({ DiscountID: parseInt(discountID) });

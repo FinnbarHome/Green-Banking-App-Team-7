@@ -3,7 +3,7 @@ const WebSocket = require('ws');
 // Store connected clients
 let clients = {}; 
 
-// Function to setup WebSocket server
+// Setup WebSocket server
 function setupWebSocket(server) {
     const wss = new WebSocket.Server({ server });
 
@@ -31,7 +31,7 @@ function setupWebSocket(server) {
     });
 }
 
-// Function to notify a client about balance/transaction updates
+// Notify a client about balance/transaction updates
 function notifyClient(accountNumber, updateType, data) {
     if (clients[accountNumber]) {
         clients[accountNumber].send(JSON.stringify({ type: updateType, data }));
