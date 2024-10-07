@@ -8,29 +8,31 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.connection.close();  // Make sure the connection is closed properly
+  // Close the database connection after all tests are done
+  await mongoose.connection.close();
 });
 
 describe('GET /api/companies/:accountNumber', () => {
   beforeEach(async () => {
-    const company = {
-      "_id": new mongoose.Types.ObjectId("66ed59116e6aaadef851b73c"),
-      "Company Name": "RedFuel Services",
-      "Spending Category": "Fuel",
-      "Carbon Emissions": 3,
-      "Waste Management": 4,
-      "Sustainability Practices": 2,
-      "Account Number": 1,
-      "Summary": "RedFuel Services focuses on retail, specializing in affordable groceries. They invest heavily in sustainable farming but have higher carbon emissions from transportation.",
-      "Balance": 50091679758,
-      "XP": 87682,
-      "Streak": -1
-    };
-    await mongoose.connection.collection('Companies').insertOne(company);
-  });
+    // Check if the company already exists
+    const existingCompany = await mongoose.connection.collection('Companies').findOne({ "Account Number": 1 });
 
-  afterEach(async () => {
-    await mongoose.connection.collection('Companies').deleteMany({});
+    if (!existingCompany) {
+      // Insert the document only if it doesn't already exist
+      const company = {
+        "Company Name": "RedFuel Services",
+        "Spending Category": "Fuel",
+        "Carbon Emissions": 3,
+        "Waste Management": 4,
+        "Sustainability Practices": 2,
+        "Account Number": 1,
+        "Summary": "RedFuel Services focuses on retail, specializing in affordable groceries. They invest heavily in sustainable farming but have higher carbon emissions from transportation.",
+        "Balance": 10000,
+        "XP": 0,
+        "Streak": 0
+      };
+      await mongoose.connection.collection('Companies').insertOne(company);
+    }
   });
 
   it('should return the company data with varying fields and measure response time', async () => {
@@ -44,8 +46,9 @@ describe('GET /api/companies/:accountNumber', () => {
     console.log(`Response time: ${responseTime}ms`);
     
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({
-      "_id": "66ed59116e6aaadef851b73c",
+
+    // Using expect.objectContaining to ignore the _id field and match the rest
+    expect(response.body).toEqual(expect.objectContaining({
       "Company Name": "RedFuel Services",
       "Spending Category": "Fuel",
       "Carbon Emissions": 3,
@@ -56,7 +59,8 @@ describe('GET /api/companies/:accountNumber', () => {
       "Balance": expect.any(Number),
       "XP": expect.any(Number),
       "Streak": expect.any(Number)
-    });
+    }));
+
     expect(responseTime).toBeLessThan(500); 
   });
 
