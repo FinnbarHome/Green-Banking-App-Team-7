@@ -91,3 +91,5 @@ const gracefulShutdown = (signal, server) => {
         process.exit(0);
     });
 };
+
+module.exports = app; // For using in tests

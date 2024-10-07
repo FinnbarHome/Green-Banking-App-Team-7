@@ -1,7 +1,7 @@
-// websocket.js
 const WebSocket = require('ws');
 
-let clients = {}; // Store connected clients
+// Store connected clients
+let clients = {}; 
 
 // Function to setup WebSocket server
 function setupWebSocket(server) {
