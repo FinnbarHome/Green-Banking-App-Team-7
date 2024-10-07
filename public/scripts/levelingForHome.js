@@ -1,3 +1,4 @@
+// Calculates the user's current level via XP
 function calculateUserLevel(userXP) {
     const levelBounds = Levels();
     let level = 0, PreviousLevelXP = 0, NextLevelXP = 0;
@@ -15,6 +16,7 @@ function calculateUserLevel(userXP) {
   
     level = Math.min(level, 10);
   
+    // Calculate the progress percentage
     let progressPercentage;
     if (level === 10) {
       const maxXP = levelBounds[levelBounds.length - 1];
@@ -30,6 +32,7 @@ function calculateUserLevel(userXP) {
   
     progressPercentage = Math.min(progressPercentage, 100);
   
+    // Return the data
     return {
       level,
       progressPercentage: Math.round(progressPercentage * 100) / 100,
@@ -38,6 +41,7 @@ function calculateUserLevel(userXP) {
     };
   }
   
+  // Calculates the level boundaries
   function Levels() {
     const power = 2.5, denominator = 0.3, levelBounds = [];
     for (let i = 0; i < 10; i++) {

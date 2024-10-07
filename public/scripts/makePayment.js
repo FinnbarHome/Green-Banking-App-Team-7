@@ -4,26 +4,26 @@ async function handlePayment(event) {
   event.preventDefault(); // Prevent form from submitting
 
   try {
-    // Get values from form
+    // Fetch the values from the submitted form
     const paymentAmount = parseFloat(document.getElementById("payment-amount").value);
     const payeeName = document.getElementById("payee-name").value;
     const paymentReference = document.getElementById("payment-reference").value;
-    const enteredPayeeAccountNumber = parseInt(document.getElementById("payee-account-number").value); // Capture entered account number
+    const enteredPayeeAccountNumber = parseInt(document.getElementById("payee-account-number").value);
 
-    validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber); // Include payee account number in validation
+    validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber); 
 
-    // Fetch payee data by name
+    // Fetch payee data via name
     const payeeData = await fetchCompanyDataByName(payeeName);
     const payeeAccountNumberFromDB = payeeData["Account Number"];
-    const payeeSpendingCategory = payeeData["Spending Category"]; // Get the spending category
+    const payeeSpendingCategory = payeeData["Spending Category"];
 
-    // Compare entered payee account number with the one in the database
+    // Compare the entered payee number to the one in the database
     if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
       alert("Entered account number does not match the account number associated with the payee.");
       throw new Error("Entered account number does not match the account number associated with the payee.");
     }
 
-    // Calculate EIS, fetch payer data, and proceed with payment process
+    // Calculate EIS and fetch payer data
     const EIS = calculateEIS(payeeData);
     const payerAccountNumber = getPayerAccountNumber();
     const payerData = await fetchCompanyDataByAccount(payerAccountNumber);
@@ -39,16 +39,16 @@ async function handlePayment(event) {
     // Fetch updated payer data
     const updatedPayerData = await fetchCompanyDataByAccount(payerAccountNumber);
 
-    // Calculate XP gain for confirmation using updated data
-    const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000); // Cap XP gain at 1000
+    // Calculate XP gain using updated data, for payment confirmation screen
+    const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000);
 
     // Recalculate the user's level after the transaction
     const updatedLevelInfo = calculateUserLevel(updatedPayerData["XP"]);
 
-    // Display confirmation with the updated values
+    // Display confirmation with the new values
     DisplayConfirmation(payeeName, paymentAmount, XPGain, streak, updatedLevelInfo.level);
 
-    // Calculate and update the progress bar using the updated XP and level
+    // Update progress bar using the new XP and level
     const progressPercentage = updatedLevelInfo.progressPercentage;
     document.getElementById("progress-bar").style.width = `${progressPercentage}%`;
 
@@ -62,9 +62,7 @@ async function handlePayment(event) {
   }
 }
 
-// Helper functions
-
-// Validates payment inputs
+// Validate payment inputs
 function validateInput(payeeName, paymentAmount, enteredPayeeAccountNumber) {
   if (!payeeName) throw new Error("Payee name is required");
   if (isNaN(paymentAmount) || paymentAmount <= 0) throw new Error("Invalid payment amount");
@@ -96,6 +94,7 @@ function calculateEIS({ "Carbon Emissions": CE = 0, "Waste Management": WM = 0, 
   return (CE + WM + SP) / 30;
 }
 
+// Calculates the user's current streak, and their EIS
 function calculateStreakAndEIS(EIS, payerData, shouldUpdateStreak) {
   const greenThreshold = 0.7;
   const redThreshold = 0.3;
@@ -106,7 +105,7 @@ function calculateStreakAndEIS(EIS, payerData, shouldUpdateStreak) {
   let isGreenTransaction = EIS >= greenThreshold;
   let isRedTransaction = EIS <= redThreshold;
 
-  if (shouldUpdateStreak) { // Only update the streak if the condition is met
+  if (shouldUpdateStreak) {
     streak = isGreenTransaction ? (streak < 0 ? 1 : streak + 1) : isRedTransaction ? (streak > 0 ? -1 : streak - 1) : 0;
   }
 
@@ -125,12 +124,14 @@ function calculateStreakAndEIS(EIS, payerData, shouldUpdateStreak) {
   return { streak, updatedEIS: EIS };
 }
 
+// Handles transactions and updates balances
 async function processPayment(payerAccountNumber, payeeAccountNumber, paymentAmount, paymentReference, updatedEIS) {
-  const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000); // Cap XP gain at 1000
+  const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000);
 
   await updateBalance(payerAccountNumber, -paymentAmount);
   await updateBalance(payeeAccountNumber, paymentAmount);
 
+  // Posts the ransaction
   await postTransaction({
     Recipient: payeeAccountNumber,
     Sender: payerAccountNumber,
@@ -142,7 +143,7 @@ async function processPayment(payerAccountNumber, payeeAccountNumber, paymentAmo
 }
 
 async function updateUserXPAndStreak(payerAccountNumber, streak, updatedEIS, paymentAmount) {
-  const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000); // Cap XP gain at 1000
+  const XPGain = Math.min(Math.round(updatedEIS * paymentAmount), 1000);
 
   await updateXP(payerAccountNumber, XPGain);
   await updateStreak(payerAccountNumber, streak);
@@ -180,6 +181,7 @@ async function postTransaction(transactionData) {
   if (!response.ok) throw new Error(`Error creating transaction: ${data.error}`);
 }
 
+// Calculates the user's current level via XP
 function calculateUserLevel(userXP) {
   const levelBounds = Levels();
   let level = 0, PreviousLevelXP = 0, NextLevelXP = 0;
@@ -197,6 +199,7 @@ function calculateUserLevel(userXP) {
 
   level = Math.min(level, 10);
 
+  // Calculate the progress percentage
   let progressPercentage;
   if (level === 10) {
     const maxXP = levelBounds[levelBounds.length - 1];
@@ -212,6 +215,7 @@ function calculateUserLevel(userXP) {
 
   progressPercentage = Math.min(progressPercentage, 100);
 
+  // Return the data
   return {
     level,
     progressPercentage: Math.round(progressPercentage * 100) / 100,
@@ -221,6 +225,7 @@ function calculateUserLevel(userXP) {
   };
 }
 
+// Calculates the level boundaries
 function Levels() {
   const power = 2.5, denominator = 0.3, levelBounds = [];
   for (let i = 0; i < 10; i++) {
@@ -229,6 +234,7 @@ function Levels() {
   return levelBounds;
 }
 
+// Display the payment confirmation screen html
 function DisplayConfirmation(payeeName, paymentAmount, xpGained, streak, level) {
   const streakColor = streak >= 0 ? 'text-green-400' : 'text-red-400';
   const streakDisplay = Math.abs(streak);
