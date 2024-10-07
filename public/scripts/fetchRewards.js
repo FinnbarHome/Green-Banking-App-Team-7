@@ -1,3 +1,4 @@
+// Calculates the user's current level via XP
 function calculateUserLevel(userXP) {
   const levelBounds = Levels();
   let level = 0, PreviousLevelXP = 0, NextLevelXP = 0;
@@ -15,6 +16,7 @@ function calculateUserLevel(userXP) {
 
   level = Math.min(level, 10);
 
+  // Calculate the progress percentage
   let progressPercentage;
   if (level === 10) {
     const maxXP = levelBounds[levelBounds.length - 1];
@@ -30,6 +32,7 @@ function calculateUserLevel(userXP) {
 
   progressPercentage = Math.min(progressPercentage, 100);
 
+  // Return the data
   return {
     level,
     progressPercentage: Math.round(progressPercentage * 100) / 100,
@@ -39,6 +42,7 @@ function calculateUserLevel(userXP) {
   };
 }
 
+// Calculates the level boundaries
 function Levels() {
   const power = 2.5, denominator = 0.3, levelBounds = [];
   for (let i = 0; i < 10; i++) {
@@ -50,15 +54,15 @@ function Levels() {
 async function fetchRewardsData() {
     try {
   
-      // Get account number from localStorage
+      // Fetch account number
       const accountNumber = localStorage.getItem('accountNumber');
   
       if (!accountNumber) {
-        console.error('No account number found in localStorage.');
+        console.error('No account number found');
         return;
       }
   
-      // Fetch the company data using the account number
+      // Fetch the account data via account number
       const response = await fetch(`/api/companies/${accountNumber}`);
       const companyData = await response.json();
   
@@ -66,24 +70,22 @@ async function fetchRewardsData() {
         console.error("Error fetching company data:", companyData.error);
         return;
       }
-  
-      // Extract user data from the response
+
       const { "Company Name": companyName, XP: userXP } = companyData;
       
+      // Calculate and fetch the user's level
       const userLevel = calculateUserLevel(userXP);
-      // Manually set the user's green level
-      document.getElementById('greenLevel').textContent = userLevel["level"]; // Set the green level in the UI
+      document.getElementById('greenLevel').textContent = userLevel["level"];
 2
-      // Display user information in the HTML
+      // Update the html
       document.getElementById('username').textContent = companyName;
       document.getElementById('xp').textContent = userXP;
       
-  
-      // Fetching discounts from the backend
+      // Fetch all discounts
       const discountResponse = await fetch('/api/discounts');
       const discounts = await discountResponse.json();
   
-      // Filtering discounts based on manually set userLevel
+      // Set the availabke discounts, based on user's level
       const eligibleDiscounts = discounts.filter(discount => userLevel["level"] >= discount.LevelReq);
   
       const rewardsContainer = document.getElementById('rewardsContainer');
@@ -92,14 +94,14 @@ async function fetchRewardsData() {
       // If no eligible rewards are found
       if (eligibleDiscounts.length === 0) {
         noRewardsElement.innerHTML = 'You have <span class="text-orange-500">no new rewards</span> to redeem.';
-        rewardsContainer.style.display = 'none'; // Hide the rewards section if no rewards are available
+        rewardsContainer.style.display = 'none';
         return;
       }
   
-      // Clear any existing rewards
+      // Clear the html
       rewardsContainer.innerHTML = '<h2 class="text-xl font-bold text-white text-center mb-4">You earned some <span class="text-orange-500">discounts!</span></h2>';
   
-      // Dynamically add the rewards based on the user's level
+      // Add each discount html
       eligibleDiscounts.forEach(discount => {
         const rewardElement = `
           <div class="grid grid-flow-col mb-4">
@@ -110,15 +112,15 @@ async function fetchRewardsData() {
         rewardsContainer.insertAdjacentHTML('beforeend', rewardElement);
       });
   
-      // Show the rewards section
+      // Display the rewards section
       rewardsContainer.style.display = 'block';
-      noRewardsElement.textContent = ''; // Clear any "no rewards" message
+      noRewardsElement.textContent = '';
   
     } catch (error) {
       console.error('Error fetching rewards data:', error);
     }
   }
   
-  // Fetch rewards data when the page loads
+  // Fetch rewards data upon page load
   window.onload = fetchRewardsData;
   

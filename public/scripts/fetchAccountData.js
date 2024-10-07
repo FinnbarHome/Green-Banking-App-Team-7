@@ -1,13 +1,11 @@
 let ws;
 
-// Initialize WebSocket connection
 function initializeWebSocket(accountNumber) {
-    ws = new WebSocket(`ws://${window.location.host}`); // Adjust this based on your WebSocket server URL
+    ws = new WebSocket(`ws://${window.location.host}`);
 
     ws.onopen = () => {
         console.log("WebSocket connection opened");
 
-        // Register the account number with the WebSocket connection
         ws.send(JSON.stringify({ type: 'register', accountNumber }));
     };
 
@@ -16,8 +14,7 @@ function initializeWebSocket(accountNumber) {
 
         // Handle transaction updates
         if (message.type === 'transactionUpdate') {
-            console.log("Received transaction update:", message.data);
-            fetchAccountData(); // Refresh account data
+            fetchAccountData();
         }
     };
 
@@ -31,17 +28,21 @@ function initializeWebSocket(accountNumber) {
 }
 
 
-// Fetch account data and initialize WebSocket connection
+// Fetch account data
 async function fetchAccountData() {
     try {
-        const accountNumber = localStorage.getItem('accountNumber');
-        if (!accountNumber) throw new Error("No account number found in localStorage.");
 
+        // Fetch account number
+        const accountNumber = localStorage.getItem('accountNumber');
+        if (!accountNumber) throw new Error("No account number found");
+
+        // Fetch data via account number
         const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
         if (!companyData) return;
         const XP = companyData['XP'];
         const levelInfo = calculateUserLevel(XP);
 
+        // update html with data
         updateDOM({
             Username: `Username: ${companyData['Company Name']}`,
             AccountNumber: `Account Number: ${companyData['Account Number']}`,
@@ -50,9 +51,8 @@ async function fetchAccountData() {
             XP: `XP: ${XP}`
         });
 
+        // call the transaction history function
         await fetchTransactionHistory(accountNumber);
-
-        // Initialize WebSocket connection
         initializeWebSocket(accountNumber);
 
     } catch (error) {
@@ -60,6 +60,7 @@ async function fetchAccountData() {
     }
 }
 
+// Fetches the user's transaction history
 async function fetchTransactionHistory(accountNumber) {
     try {
         const transactions = await fetchData(`/api/transactions/${accountNumber}`, "transactions");
@@ -76,7 +77,7 @@ async function fetchTransactionHistory(accountNumber) {
     }
 }
 
-// General function to fetch data and handle errors
+// Fetch data and handle errors
 async function fetchData(url, dataType) {
     try {
         const response = await fetch(url);
@@ -91,19 +92,18 @@ async function fetchData(url, dataType) {
     }
 }
 
-// Update multiple DOM elements at once
+// Update html elements
 function updateDOM(updates) {
     Object.entries(updates).forEach(([id, text]) => {
         document.getElementById(id).textContent = text;
     });
 }
 
-// Clear content and insert new HTML in one go
+// Clear and update html
 function clearAndInsertHTML(elementId, html) {
     document.getElementById(elementId).innerHTML = html;
 }
 
-// Helper to generate transaction header HTML
 const transactionHeaderHTML = () => `
     <div class="grid grid-cols-3 gap-4 mb-2 font-bold text-lg bg-gray-800 text-white px-5 py-2 rounded-lg">
         <h2 class="text-center">Company</h2>
@@ -111,7 +111,7 @@ const transactionHeaderHTML = () => `
         <h2 class="text-right">Date</h2>
     </div>`;
 
-// Insert transaction element into the DOM
+// Update html with transactions
 function insertTransactionElement(isOutgoing, amount, transactionDate, companyName, bgColor) {
     const transactionHTML = `
         <a href="analysis.html?companyName=${encodeURIComponent(companyName)}">
@@ -126,6 +126,7 @@ function insertTransactionElement(isOutgoing, amount, transactionDate, companyNa
     document.getElementById('pastPayments').insertAdjacentHTML('beforeend', transactionHTML);
 }
 
+// Prepares the transaction data
 async function prepareTransactionData(transaction, accountNumber, companyCache) {
     const isOutgoing = transaction.Sender === parseInt(accountNumber);
     const amount = isOutgoing ? -transaction.Amount : transaction.Amount;
@@ -141,11 +142,14 @@ async function prepareTransactionData(transaction, accountNumber, companyCache) 
 
     return { isOutgoing, amount, transactionDate, companyName, bgColor };
 }
+
+// Calculates the background color of each transacion
 function getBgColor(companyData) {
     const combinedScore = (companyData['Carbon Emissions'] || 0) + (companyData['Waste Management'] || 0) + (companyData['Sustainability Practices'] || 0);
 
+    // Sets blue background for user-to-user transactions
     if (combinedScore === 0) {
-        return 'bg-blue-700'; // Return white background for a combined score of 0
+        return 'bg-blue-700';
     } else {
 
     return combinedScore <= 9 ? 'bg-red-900' :
@@ -153,6 +157,7 @@ function getBgColor(companyData) {
     };
 } 
 
+// Calculates the level boundaries
 function Levels() {
     const power = 2.5;
     const denominator = 0.3;
@@ -166,7 +171,7 @@ function Levels() {
     return levelBounds;
   }
 
-
+  // Calculates the user's current level via XP
   function calculateUserLevel(userXP) {
     const levelBounds = Levels();
     let level = 0;
@@ -189,6 +194,7 @@ function Levels() {
       }
     }
   
+    // Calculate the progress percentage
     if (level < levelBounds.length) {
       let xpForNextLevel = NextLevel - PreviousLevel;
       let currentLevelProgress = userXP - PreviousLevel;
@@ -197,6 +203,7 @@ function Levels() {
       progressPercentage = 100;
     }
   
+    // Return the level and XP data
     return {
       level: level,
       progressPercentage: Math.round(progressPercentage * 100) / 100,

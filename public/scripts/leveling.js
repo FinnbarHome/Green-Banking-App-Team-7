@@ -1,3 +1,4 @@
+// Calculates the level boundaries
 function Levels() {
   const power = 2.5;
   const denominator = 0.3;
@@ -11,6 +12,7 @@ function Levels() {
   return levelBounds;
 }
 
+// Calculates the user's current level via XP
 function calculateUserLevel(userXP) {
   const levelBounds = Levels();
   let level = 0;
@@ -33,6 +35,7 @@ function calculateUserLevel(userXP) {
     }
   }
 
+  // Calculate the progress percentage
   if (level < levelBounds.length) {
     let xpForNextLevel = NextLevel - PreviousLevel;
     let currentLevelProgress = userXP - PreviousLevel;
@@ -41,6 +44,7 @@ function calculateUserLevel(userXP) {
     progressPercentage = 100;
   }
 
+  // Return the data
   return {
     level: level,
     progressPercentage: Math.round(progressPercentage * 100) / 100,
@@ -49,6 +53,7 @@ function calculateUserLevel(userXP) {
   };
 }
 
+// Calculates the XP based on the transaction amount
 export async function xp(accountNumber, transactionAmount) {
   try {
     const response = await fetch(`/api/companies/${accountNumber}`, {
@@ -103,6 +108,7 @@ export async function xp(accountNumber, transactionAmount) {
   }
 }
 
+// Calculates the green alternative companies
 async function greenAlternatives(spendingCategory) {
   try {
     const response = await fetch('/api/companies', {
@@ -129,6 +135,7 @@ async function greenAlternatives(spendingCategory) {
   }
 }
 
+// Calculates the EIS of a company
 function calculateEIS(company) {
   const maxCatScore = 30;
   const categoryScore = (company.CarbonEmissions || 0) + 
@@ -139,7 +146,6 @@ function calculateEIS(company) {
   function transaction(transactionAmount, accountBalance)
   {
     accountBalance =- transactionAmount;
-    //update database
 
     return accountBalance;
   }

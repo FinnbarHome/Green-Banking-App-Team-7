@@ -15,43 +15,45 @@ async function handleLogin() {
     const response = await sendLoginRequest(username, accountNumber);
 
     if (response.ok) {
-      // On success, store account number and redirect
+      // Store account number
       localStorage.setItem('accountNumber', response.data.accountNumber);
+
+      // Redirect to account page
       window.location.href = 'home.html';
     } else {
       // Display error message on failure
-      displayErrorMessage(errorMessage, response.data.error || "Login failed. Please check your username and account number.");
+      displayErrorMessage(errorMessage, response.data.error || "Login failed, check your username and account number");
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    displayErrorMessage(errorMessage, "An error occurred during login. Please try again.");
+    displayErrorMessage(errorMessage, "An error occurred during login, please try again.");
   }
 }
 
-// Helper function to clear error messages
+// Clear error messages
 function clearErrorMessage(errorMessageElement) {
   errorMessageElement.textContent = "";
 }
 
-// Helper function to validate login inputs
+// Validate login inputs
 function validateLoginInputs(username, accountNumber, errorMessageElement) {
   if (!username) {
-    displayErrorMessage(errorMessageElement, "Please enter a username.");
+    displayErrorMessage(errorMessageElement, "Please enter a username");
     return false;
   }
   if (!accountNumber) {
-    displayErrorMessage(errorMessageElement, "Please enter an Account Number.");
+    displayErrorMessage(errorMessageElement, "Please enter an Account Number");
     return false;
   }
   return true;
 }
 
-// Helper function to display error messages
+// Display error messages
 function displayErrorMessage(errorMessageElement, message) {
   errorMessageElement.textContent = message;
 }
 
-// Helper function to send login request
+// Send login request
 async function sendLoginRequest(username, accountNumber) {
   const response = await fetch('/api/login', {
     method: 'POST',

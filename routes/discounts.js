@@ -75,6 +75,7 @@ router.post("/discounts", async (req, res) => {
 router.delete("/discounts/:discountID", async (req, res) => {
   try {
     const discountID = parseInt(req.params.discountID);
+    
     // Find and delete the discount with the specified DiscountID
     const result = await db.collection("Discounts").deleteOne({ DiscountID: discountID });
     if (result.deletedCount === 0) {
