@@ -58,7 +58,7 @@ async function fetchRewardsData() {
       const accountNumber = localStorage.getItem('accountNumber');
   
       if (!accountNumber) {
-        console.error('No account number found in localStorage.');
+        console.error('No account number found');
         return;
       }
   
@@ -75,7 +75,7 @@ async function fetchRewardsData() {
       
       // Calculate and fetch the user's level
       const userLevel = calculateUserLevel(userXP);
-      document.getElementById('greenLevel').textContent = userLevel["level"]; // Set the green level in the UI
+      document.getElementById('greenLevel').textContent = userLevel["level"];
 2
       // Update the html
       document.getElementById('username').textContent = companyName;
@@ -94,7 +94,7 @@ async function fetchRewardsData() {
       // If no eligible rewards are found
       if (eligibleDiscounts.length === 0) {
         noRewardsElement.innerHTML = 'You have <span class="text-orange-500">no new rewards</span> to redeem.';
-        rewardsContainer.style.display = 'none'; // Hide the rewards section if no rewards are available
+        rewardsContainer.style.display = 'none';
         return;
       }
   
@@ -114,7 +114,7 @@ async function fetchRewardsData() {
   
       // Display the rewards section
       rewardsContainer.style.display = 'block';
-      noRewardsElement.textContent = ''; // Clear any "no rewards" message
+      noRewardsElement.textContent = '';
   
     } catch (error) {
       console.error('Error fetching rewards data:', error);

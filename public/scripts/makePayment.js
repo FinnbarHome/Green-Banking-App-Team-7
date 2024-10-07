@@ -1,7 +1,7 @@
 document.getElementById("payNowButton").addEventListener("click", handlePayment);
 
 async function handlePayment(event) {
-  event.preventDefault(); // Prevent form from submitting
+  event.preventDefault();
 
   try {
     // Fetch the values from the submitted form
@@ -19,8 +19,8 @@ async function handlePayment(event) {
 
     // Compare the entered payee number to the one in the database
     if (enteredPayeeAccountNumber !== payeeAccountNumberFromDB) {
-      alert("Entered account number does not match the account number associated with the payee.");
-      throw new Error("Entered account number does not match the account number associated with the payee.");
+      alert("Account numbers do not match");
+      throw new Error("Account numbers do not match");
     }
 
     // Calculate EIS and fetch payer data
@@ -54,10 +54,10 @@ async function handlePayment(event) {
 
   } catch (error) {
     if (error.message.includes("Company not found")) {
-      alert("The payee name you entered does not exist. Please check and try again.");
+      alert("The payee name you entered does not exist, please try again.");
     } else {
       console.error("An error occurred during the payment process:", error);
-      alert("An unexpected error occurred. Please try again.");
+      alert("An unexpected error occurred, please try again.");
     }
   }
 }
@@ -79,7 +79,7 @@ async function fetchCompanyDataByAccount(accountNumber) {
 
 function getPayerAccountNumber() {
   const accountNumber = localStorage.getItem('accountNumber');
-  if (!accountNumber) throw new Error("Payer account number not found in localStorage");
+  if (!accountNumber) throw new Error("Payer account number not found");
   return parseInt(accountNumber);
 }
 

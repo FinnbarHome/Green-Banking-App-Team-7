@@ -146,7 +146,6 @@ function calculateEIS(company) {
   function transaction(transactionAmount, accountBalance)
   {
     accountBalance =- transactionAmount;
-    //update database
 
     return accountBalance;
   }

@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mongoose = require("mongoose");
 const db = mongoose.connection;
-const { notifyClient } = require('../websocket'); // Import WebSocket notification utility from websocket.js
+const { notifyClient } = require('../websocket');
 
 // Utility function to handle errors
 const handleError = (res, error, status = 500, message = "An error occurred") => {
@@ -26,7 +26,7 @@ const validateAccounts = async (Recipient, Sender, res) => {
   }
 };
 
-// POST Create a new transaction (with date field)
+// POST Create a new transaction
 router.post("/transactions", async (req, res) => {
   try {
       const { Recipient, Sender, Amount, Reference } = req.body;
@@ -43,7 +43,7 @@ router.post("/transactions", async (req, res) => {
           Sender,
           Amount,
           Reference,
-          date: new Date() // Set the current date
+          date: new Date()
       };
 
       const result = await db.collection("Transactions").insertOne(newTransaction);
@@ -72,10 +72,10 @@ router.get("/transactions", async (req, res) => {
 router.get("/transactions/:accountNumber", async (req, res) => {
   try {
     const accountNumber = parseInt(req.params.accountNumber);
-    // Fetch transactions where the account number is either the recipient or sender, sorted by date
+    // Fetch transactions where the account number is either the recipient or sender sorted by date
     const transactions = await db.collection("Transactions").find({
       $or: [{ Recipient: accountNumber }, { Sender: accountNumber }]
-    }).sort({ date: -1 }).toArray();  // Sort by date (descending)
+    }).sort({ date: -1 }).toArray();
     if (transactions.length === 0) {
       return res.status(404).json({ error: "No transactions found for this account number" });
     }
