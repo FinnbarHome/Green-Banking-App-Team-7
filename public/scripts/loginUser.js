@@ -22,11 +22,11 @@ async function handleLogin() {
       window.location.href = 'home.html';
     } else {
       // Display error message on failure
-      displayErrorMessage(errorMessage, response.data.error || "Login failed. Please check your username and account number.");
+      displayErrorMessage(errorMessage, response.data.error || "Login failed, check your username and account number");
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    displayErrorMessage(errorMessage, "An error occurred during login. Please try again.");
+    displayErrorMessage(errorMessage, "An error occurred during login, please try again.");
   }
 }
 

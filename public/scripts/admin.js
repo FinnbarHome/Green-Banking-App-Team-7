@@ -6,7 +6,7 @@ function createElement(tag, classes = [], textContent = '') {
     return element;
 }
 
-// Function to handle API requests in a streamlined way
+// Handle API requests
 async function apiRequest(url, method = 'GET', body = null) {
     const options = {
         method,
@@ -16,11 +16,11 @@ async function apiRequest(url, method = 'GET', body = null) {
     };
     if (body) options.body = JSON.stringify(body);
     const response = await fetch(url, options);
-    if (!response.ok) throw new Error(`Oops! Failed to ${method} at ${url}`);
+    if (!response.ok) throw new Error(`Failed to ${method} at ${url}`);
     return response.json();
 }
 
-// This function creates a styled discount element with a delete button
+// Creates a styled discount element with a delete button
 function createDiscountElement(discount) {
     const discountElement = createElement('div', ['flex', 'justify-between', 'items-center', 'bg-green-900', 'mb-4', 'rounded-lg', 'py-4', 'px-5']);
     const companyElement = createElement('h2', ['text-xl', 'font-bold', 'text-white'], discount.Company);
@@ -31,15 +31,15 @@ function createDiscountElement(discount) {
     return discountElement;
 }
 
-// Function to find the next available DiscountID based on existing discounts
+// Finds the next available DiscountID based on existing discounts
 async function getNextDiscountID() {
     try {
         const discounts = await apiRequest('/api/discounts');
-        if (discounts.length === 0) return 1; // Start with 1 if no discounts exist
-        return Math.max(...discounts.map(d => d.DiscountID)) + 1; // Increment from the highest existing ID
+        if (discounts.length === 0) return 1; 
+        return Math.max(...discounts.map(d => d.DiscountID)) + 1;
     } catch (error) {
-        console.error("Whoops! Error fetching discounts for ID generation:", error);
-        return 1; // If there's an error, fallback to 1
+        console.error("Error fetching discounts for ID generation:", error);
+        return 1;
     }
 }
 
@@ -48,15 +48,16 @@ async function fetchDiscounts() {
     try {
         const discounts = await apiRequest('/api/discounts');
         const rewardsContainer = document.getElementById('rewardsContainer');
-        rewardsContainer.innerHTML = ''; // Clear previous discounts
+        rewardsContainer.innerHTML = '';
         if (discounts.length === 0) {
             rewardsContainer.innerHTML = '<p class="text-xl font-bold text-white text-center">No discounts available at the moment.</p>';
-            return; // Exit if no discounts to show
+            return;
         }
-        // Show each discount using our styled element
+
+        // Show each discount
         discounts.forEach(discount => rewardsContainer.appendChild(createDiscountElement(discount)));
     } catch (error) {
-        console.error("Oh no! Error fetching discounts:", error);
+        console.error("Error fetching discounts:", error);
     }
 }
 
@@ -88,9 +89,9 @@ async function createDiscount() {
         });
         errorTag.classList = "text-green-200 text-center font-bold";
         errorTag.textContent = "Success! Discount created!";
-        fetchDiscounts(); // Refresh the discount list to show the new one
+        fetchDiscounts();
     } catch (error) {
-        console.error("Yikes! Error creating discount:", error);
+        console.error("Error creating discount:", error);
         errorTag.classList = "text-red-400 text-center font-bold";
         errorTag.textContent = "Something went wrong while creating the discount.";
     }
@@ -100,9 +101,9 @@ async function createDiscount() {
 async function deleteDiscount(discountID) {
     try {
         await apiRequest(`/api/discounts/${discountID}`, 'DELETE');
-        fetchDiscounts(); // Refresh the discount list after deleting
+        fetchDiscounts(); 
     } catch (error) {
-        console.error("Uh-oh! Error deleting discount:", error);
+        console.error("Error deleting discount:", error);
     }
 }
 

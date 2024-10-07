@@ -15,7 +15,7 @@ function attemptSignup()
     const balance = document.getElementById("balance").value;
     if(username == "" || balance <= 0)
     {
-        document.getElementById("errorTag").innerHTML = "Please enter a valid username and balance.";
+        document.getElementById("errorTag").innerHTML = "Enter a valid username and balance.";
     }
     else
     {

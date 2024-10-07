@@ -34,7 +34,7 @@ async function fetchAccountData() {
 
         // Fetch account number
         const accountNumber = localStorage.getItem('accountNumber');
-        if (!accountNumber) throw new Error("No account number found in localStorage.");
+        if (!accountNumber) throw new Error("No account number found");
 
         // Fetch data via account number
         const companyData = await fetchData(`/api/companies/${accountNumber}`, "company data");
@@ -126,7 +126,7 @@ function insertTransactionElement(isOutgoing, amount, transactionDate, companyNa
     document.getElementById('pastPayments').insertAdjacentHTML('beforeend', transactionHTML);
 }
 
-// 
+// Prepares the transaction data
 async function prepareTransactionData(transaction, accountNumber, companyCache) {
     const isOutgoing = transaction.Sender === parseInt(accountNumber);
     const amount = isOutgoing ? -transaction.Amount : transaction.Amount;

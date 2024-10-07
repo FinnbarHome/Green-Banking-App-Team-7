@@ -15,6 +15,7 @@ async function fetchData(url, dataType) {
 
 // Add "admin.html" link if the user is an admin
 async function checkAdminStatus() {
+    
     // Get the account number from localStorage
     const accountNumber = localStorage.getItem('accountNumber');
     if (!accountNumber) return;

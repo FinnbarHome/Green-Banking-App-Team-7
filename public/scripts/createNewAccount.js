@@ -22,7 +22,7 @@ async function CreateNewAccount() {
         }
     } catch (error) {
         console.error("Error creating account:", error);
-        alert("An error occurred while creating the account. Please try again.");
+        alert("An error occurred while creating the account, please try again.");
     }
 }
 

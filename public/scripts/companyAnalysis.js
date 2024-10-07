@@ -1,7 +1,7 @@
 async function fetchCompanyData() {
   try {
       const companyName = getCompanyNameFromUrl();
-      const response = await fetch(`/api/companies/name/${encodeURIComponent(companyName)}`); // Adjust API endpoint as needed
+      const response = await fetch(`/api/companies/name/${encodeURIComponent(companyName)}`);
       if (!response.ok) {
           throw new Error(`Error: ${response.status} ${response.statusText}`);
       }
@@ -9,7 +9,7 @@ async function fetchCompanyData() {
 
       // Update the elements with the data
       document.getElementById('companyName').textContent = companyData['Company Name'];
-      document.getElementById('transactionType').textContent = companyData['Spending Category']; // Add a transaction type if applicable
+      document.getElementById('transactionType').textContent = companyData['Spending Category'];
       document.getElementById('carbEmissions').textContent = companyData['Carbon Emissions'];
       document.getElementById('wasteManagement').textContent = companyData['Waste Management'];
       document.getElementById('sustainPractices').textContent = companyData['Sustainability Practices'];
@@ -70,7 +70,6 @@ async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
       .filter(company => {
         // Validate spending category
         const companySpendingCategory = company["Spending Category"] || '';
-        console.log('Company Spending Category:', companySpendingCategory);
 
         return companySpendingCategory.toLowerCase() === spendingCategory.toLowerCase() &&
                calculateEIS(company) >= 7 && company["Company Name"] != companyName && calculateEIS(company) >= CompanyEIS;
