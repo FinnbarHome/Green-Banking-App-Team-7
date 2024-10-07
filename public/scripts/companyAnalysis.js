@@ -7,19 +7,19 @@ async function fetchCompanyData() {
       }
       const companyData = await response.json();
 
-      // Update the DOM elements with the fetched data
+      // Update the elements with the data
       document.getElementById('companyName').textContent = companyData['Company Name'];
       document.getElementById('transactionType').textContent = companyData['Spending Category']; // Add a transaction type if applicable
       document.getElementById('carbEmissions').textContent = companyData['Carbon Emissions'];
       document.getElementById('wasteManagement').textContent = companyData['Waste Management'];
       document.getElementById('sustainPractices').textContent = companyData['Sustainability Practices'];
 
-      // Calculate Environmental Impact Score (for example)
+      // Calculate EIS
       const eiScore = (companyData['Carbon Emissions'] + companyData['Waste Management'] + companyData['Sustainability Practices']) / 3;
       document.getElementById('eiScore').textContent = eiScore.toFixed(2);
       
-      // Call getRagRating and pass the calculated EIS
-      getRagRating(eiScore);  // Pass the environmental impact score
+      // Calculate RAG from EIS
+      getRagRating(eiScore); 
 
       spendCat = companyData['Spending Category'];
       compName = companyData['Company Name'];
@@ -31,18 +31,19 @@ async function fetchCompanyData() {
 }
 
 function getRagRating(eiScore) {
-  let Ragrating = eiScore; // Use the passed eiScore to determine RAG rating
+  let Ragrating = eiScore;
   const ragRatingElement = document.getElementById("ragRating");
 
+  // Change coloring and text based on RAG rating
   if (Ragrating <= 3) {
     ragRatingElement.textContent = "Red";
-    ragRatingElement.classList.add("text-red-400"); // Set text color to red
+    ragRatingElement.classList.add("text-red-400"); 
   } else if (Ragrating <= 7) {
     ragRatingElement.textContent = "Amber";
-    ragRatingElement.classList.add("text-orange-500"); // Set text color to orange for amber
+    ragRatingElement.classList.add("text-orange-500");
   } else {
     ragRatingElement.textContent = "Green";
-    ragRatingElement.classList.add("text-green-400");  // Set text color to green
+    ragRatingElement.classList.add("text-green-400"); 
   }
 }
 
@@ -51,6 +52,7 @@ function getCompanyNameFromUrl() {
   return params.get('companyName');
 }
 
+// Ftech the green alternative companies
 async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
   try {
     const response = await fetch('/api/companies', {
@@ -64,12 +66,9 @@ async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
 
     const companies = await response.json();
 
-    // Log the companies to see what is being returned
-    console.log('Companies:', companies);
-
     const greenCompanies = companies
       .filter(company => {
-        // Check if SpendingCategory exists and is a valid string
+        // Validate spending category
         const companySpendingCategory = company["Spending Category"] || '';
         console.log('Company Spending Category:', companySpendingCategory);
 
@@ -81,7 +80,7 @@ async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
 
     console.log('Green Companies:', greenCompanies);
 
-    // Now display the green alternatives on the page
+    // Display the alternatives
     displayGreenAlternatives(greenCompanies);
 
   } catch (error) {
@@ -93,23 +92,26 @@ async function greenAlternatives(companyName, spendingCategory, CompanyEIS) {
 
 
 function calculateEIS(company) {
-  // Assuming the company data contains these fields:
+
+  // Fetch the EIS figures from the data
   const carbonEmissions = company['Carbon Emissions'] || 0;
   const wasteManagement = company['Waste Management'] || 0;
   const sustainabilityPractices = company['Sustainability Practices'] || 0;
 
-  // Calculate the Environmental Impact Score as the average of the three factors
+  // Calculate the EIS as an average
   const total = carbonEmissions + wasteManagement + sustainabilityPractices;
   const eis = total / 3;
 
   return eis;
 }
 
+// Display the green alternative companies
 function displayGreenAlternatives(greenCompanies) {
-  const alternativesContainer = document.getElementById('alternatives'); // Ensure you have an element with this ID in HTML
+  const alternativesContainer = document.getElementById('alternatives');
 
-  alternativesContainer.innerHTML = ''; // Clear any previous content
+  alternativesContainer.innerHTML = '';
 
+  // Handle case where there are no greener alternatives
   if (greenCompanies.length === 0) {
     alternativesContainer.textContent = "No green alternative companies available";
     alternativesContainer.classList.add("text-red-400");
@@ -119,6 +121,7 @@ function displayGreenAlternatives(greenCompanies) {
     return;
   }
 
+  // Style the green companies
   greenCompanies.forEach(company => {
     const companyElement = document.createElement('div');
     companyElement.classList.add(
@@ -138,5 +141,5 @@ function displayGreenAlternatives(greenCompanies) {
 
 
 
-// Call the function to fetch data when the page loads
+// Call the function upon page loading
 window.onload = fetchCompanyData;

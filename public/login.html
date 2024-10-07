@@ -2,7 +2,7 @@
 <html>
 <head>
     <style>
-      /* Force input text color to be black */
+      /* Ensures black text */
       input, textarea, select {
         color: black !important;
       }
@@ -33,6 +33,8 @@
           <img class="border-4 border-green-800 mt-1 mb-5 rounded-full justify-center flex h-52 w-52 lg:h-80 lg:w-80" alt="A ClipArt logo of a bank." src="images/bank.jpg">
         </div>
         <p id="errorTag" class="text-center text-red-400 mb-1"></p>
+
+        <!-- Input boxes for entering login details -->
         <div class="flex justify-center items-center">
           <h2 class="px-3 text-white font-bold">Username  :  </h2>
             <input id="username" type="text" class="text-center flex mt-3 mb-2 p-1 bg-white border shadow-sm placeholder-slate-400 block rounded-lg" placeholder="Username"/>
@@ -44,17 +46,17 @@
         <div class="flex justify-center items-center">
           <button id="loginButton" class="bg-green-700 text-white font-bold py-2 px-4 rounded">Log In</button>
         </div>
+
+        <!-- Redirects to sign up page -->
         <p class="text-white text-center mt-5">Not a user? <a class="text-blue-400 hover:underline" href="./signup.html">Sign up here.</a></p>
         <div id="errorMessage" class="text-red-500 text-center mt-5"></div>
       </div>
     </div>
 
-  
-  <!-- Footer -->
   <footer class="bg-green-900 mt-auto">
     <div class="mx-auto p-4 text-center items-center justify-between">
         <h1 class="text-gray-400">© 2024 EcoCents</h1>
-        <!-- Light Mode Toggle Button Moved to Footer -->
+        <!-- Light mode toggle -->
         <button id="themeToggle" class="mt-4 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
         Toggle Light Mode
         </button>
@@ -62,7 +64,7 @@
   </footer>
 
   <script src="scripts/loginUser.js"></script>
-  <!-- Script to handle checking dark mode, light mode button -->
+  <!-- Checks dark mode / light mode -->
   <script src="scripts/darkLightButton.js"></script>
 
 </body>

@@ -4,6 +4,7 @@ async function CreateNewAccount() {
     const companyName = document.getElementById("username").value;
     const balance = parseFloat(document.getElementById("balance").value);
 
+    // Validate the account input
     if (!isValidInput(companyName, balance)) return;
 
     try {
@@ -15,7 +16,7 @@ async function CreateNewAccount() {
         if (response.ok) {
             const accountNumber = response.data["Account Number"];
             alert(`Account created successfully! Your new account number is: ${accountNumber}`);
-            window.location.href = 'login.html'; // Redirect to login page
+            window.location.href = 'login.html';
         } else {
             alert(response.data.error || response.data.warning);
         }
@@ -46,6 +47,6 @@ async function sendPostRequest(url, body) {
         return { ok: response.ok, data };
     } catch (error) {
         console.error("Error in fetch request:", error);
-        throw error; // rethrow to be handled in the calling function
+        throw error;
     }
 }
