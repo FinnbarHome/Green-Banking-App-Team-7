@@ -1,5 +1,31 @@
+// Base URL for API requests
+const API_BASE_URL = "http://localhost:3000/api"; // Backend server URL
+
+// Add event listener for login button
 document.getElementById("loginButton").addEventListener("click", handleLogin);
 
+// General function to make API requests
+async function apiRequest(endpoint, method = "POST", body = null) {
+  const url = `${API_BASE_URL}${endpoint}`; // Construct full URL
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  if (body) options.body = JSON.stringify(body);
+
+  try {
+    const response = await fetch(url, options);
+    const data = await response.json();
+    return { ok: response.ok, data };
+  } catch (error) {
+    console.error(`API Request Error: ${error.message}`);
+    throw error;
+  }
+}
+
+// Handle user login
 async function handleLogin() {
   const username = document.getElementById("username").value;
   const accountNumber = document.getElementById("accountNumber").value;
@@ -11,22 +37,32 @@ async function handleLogin() {
   if (!validateLoginInputs(username, accountNumber, errorMessage)) return;
 
   try {
-    // Make the login request
-    const response = await sendLoginRequest(username, accountNumber);
+    // Send login request to backend
+    const response = await apiRequest("/login", "POST", {
+      username,
+      accountNumber,
+    });
 
     if (response.ok) {
-      // Store account number
-      localStorage.setItem('accountNumber', response.data.accountNumber);
+      // Store account number in local storage
+      localStorage.setItem("accountNumber", response.data.accountNumber);
 
-      // Redirect to account page
-      window.location.href = 'home.html';
+      // Redirect to the home page
+      window.location.href = "home.html";
     } else {
-      // Display error message on failure
-      displayErrorMessage(errorMessage, response.data.error || "Login failed, check your username and account number");
+      // Display error message on login failure
+      displayErrorMessage(
+        errorMessage,
+        response.data.error ||
+          "Login failed, check your username and account number"
+      );
     }
   } catch (error) {
     console.error("Error logging in:", error);
-    displayErrorMessage(errorMessage, "An error occurred during login, please try again.");
+    displayErrorMessage(
+      errorMessage,
+      "An error occurred during login, please try again."
+    );
   }
 }
 
@@ -51,18 +87,4 @@ function validateLoginInputs(username, accountNumber, errorMessageElement) {
 // Display error messages
 function displayErrorMessage(errorMessageElement, message) {
   errorMessageElement.textContent = message;
-}
-
-// Send login request
-async function sendLoginRequest(username, accountNumber) {
-  const response = await fetch('/api/login', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({ username, accountNumber })
-  });
-
-  const data = await response.json();
-  return { ok: response.ok, data };
 }
