@@ -31,7 +31,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
 
 // WebSocket initialization
 function initializeWebSocket(accountNumber) {
-  ws = new WebSocket(`ws://${window.location.host}`);
+  ws = new WebSocket(`ws://${API_BASE_URL}`);
 
   ws.onopen = () => {
     console.log("WebSocket connection opened");
