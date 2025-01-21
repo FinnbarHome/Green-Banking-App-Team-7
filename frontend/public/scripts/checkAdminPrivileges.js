@@ -1,5 +1,7 @@
-// Base URL for API requests
-const API_BASE_URL = "http://localhost:3000/api"; // Backend server URL
+import CONFIG from "./config.js";
+
+// Get the API backend base URL from the config file
+const API_BASE_URL = CONFIG.API_BASE_URL;
 
 // General function to make API requests and handle errors
 async function apiRequest(endpoint, method = "GET", body = null) {
