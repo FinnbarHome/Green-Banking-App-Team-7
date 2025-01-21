@@ -1,95 +1,95 @@
-require('dotenv').config();
-const express = require('express');
-const cors = require('cors');
-//const helmet = require('helmet');
-const morgan = require('morgan');
-const compression = require('compression');
-const rateLimit = require('express-rate-limit');
-const connectDB = require('./config/db');
-const apiRoutes = require('./routes/api');
+require("dotenv").config();
+const express = require("express");
+const cors = require("cors");
+// const helmet = require('helmet'); // Secure HTTP headers - disabled for AWS compatibility
+const morgan = require("morgan");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
+const connectDB = require("./config/db");
+const apiRoutes = require("./routes/api");
 const discountsRoutes = require("./routes/discounts");
 const transactionsRoutes = require("./routes/transactions");
-const path = require('path');
-const { setupWebSocket } = require('./websocket'); 
+const path = require("path");
+const { setupWebSocket } = require("./websocket");
 
 const app = express();
 
 // Validate required environment variables
-const requiredEnvVars = ['PORT', 'MONGO_URI'];
+const requiredEnvVars = ["PORT", "MONGO_URI"];
 requiredEnvVars.forEach((key) => {
-    if (!process.env[key]) {
-        console.error(`ERROR: ${key} not specified in .env`);
-        process.exit(1);
-    }
+  if (!process.env[key]) {
+    console.error(`ERROR: ${key} not specified in .env`);
+    process.exit(1);
+  }
 });
 
 // Middleware
-// app.use(helmet()); // Adds secure HTTP headers - Doesn't work on AWS, had to remove
-app.use(cors()); // Enable CORS
-app.use(express.json()); // Parse incoming JSON requests
-app.use(compression()); // Compress responses
-app.use(morgan('combined')); // HTTP request logger
+// app.use(helmet()); // Secure HTTP headers - disabled for AWS compatibility
+app.use(cors()); // Enable CORS for all routes
+app.use(express.json()); // Parse JSON requests
+app.use(compression()); // Compress response bodies
+app.use(morgan("combined")); // Log HTTP requests
 
-// Rate limiting
+// Rate limiting middleware
 const limiter = rateLimit({
-    windowMs: 60 * 60 * 1000, // 60 minutes in ms
-    max: 250, // Limit each ip to 250 req
-    message: "Too many requests, please try again later.",
+  windowMs: 60 * 60 * 1000, // 60 min window
+  max: 250, // Max 250 requests per IP
+  message: "Too many requests, please try again later.",
 });
 app.use(limiter);
 
-// Serve static files from the public folder
-app.use(express.static(path.join(__dirname, 'public')));
+// Serve static files
+app.use(express.static(path.join(__dirname, "public")));
 
-// Establish Db Connection and start server
+// Establish DB connection and start server
 connectDB()
-    .then(() => {
-        const PORT = process.env.PORT || 3000;
-        const server = app.listen(PORT, () => {
-            console.log(`API server listening on port ${PORT}!`);
-        });
-
-        // Init WebSocket server
-        setupWebSocket(server); 
-    })
-    .catch((error) => {
-        console.error("ERROR: Database connection failed", error);
-        process.exit(1);
+  .then(() => {
+    const PORT = process.env.PORT || 3000; // Default port to 3000 if not set
+    const server = app.listen(PORT, () => {
+      console.log(`API server listening on port ${PORT}!`);
     });
+
+    // Initialize WebSocket server
+    setupWebSocket(server);
+  })
+  .catch((error) => {
+    console.error("ERROR: Database connection failed", error);
+    process.exit(1);
+  });
 
 // API routes
-app.use('/api', apiRoutes);
-app.use("/api", discountsRoutes);
-app.use("/api", transactionsRoutes);
+app.use("/api", apiRoutes); // Core API endpoints
+app.use("/api", discountsRoutes); // Discounts endpoints
+app.use("/api", transactionsRoutes); // Transactions endpoints
 
-// Root endpoint for basic health check
-app.get('/', (req, res) => {
-    res.send("Hello World!");
+// Root endpoint (health check)
+app.get("/", (req, res) => {
+  res.send("Hello World!");
 });
 
-// Fallback for SPA routing
-app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'login.html'));
+// SPA fallback route
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// 404 Error Handler for non-existent routes
+// Handle 404 errors
 app.use((req, res, next) => {
-    res.status(404).json({ error: "Resource not found" });
+  res.status(404).json({ error: "Resource not found" });
 });
 
-// Error Handler for all uncaught errors
+// Handle other uncaught errors
 app.use((error, req, res, next) => {
-    console.error("ERROR:", error.stack);
-    res.status(500).json({ error: "Internal Server Error" });
+  console.error("ERROR:", error.stack);
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
-// Graceful shutdown func
+// Graceful shutdown
 const gracefulShutdown = (signal, server) => {
-    console.log(`Received ${signal}. Shutting down gracefully...`);
-    server.close(() => {
-        console.log('Closed out remaining connections');
-        process.exit(0);
-    });
+  console.log(`Received ${signal}. Shutting down gracefully...`);
+  server.close(() => {
+    console.log("Closed out remaining connections");
+    process.exit(0);
+  });
 };
 
-module.exports = app; // Import for use in supertests etc etc
+module.exports = app; // Export for testing and reuse
