@@ -3,7 +3,7 @@ kind: Service
 metadata:
   name: frontend-service
 spec:
-  type: { { .Values.frontend.service.type } }
+  type: ClusterIP
   selector:
     { { - include "green-banking.frontend.selectorLabels" . | nindent 4 } }
   ports:

@@ -1,65 +1,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "green-banking.backend.fullname" . }}
-  labels:
-    {{- include "green-banking.backend.labels" . | nindent 4 }}
+  name: { { include "green-banking.backend.fullname" . } }
+  labels: { { - include "green-banking.backend.labels" . | nindent 4 } }
 spec:
-  {{- if not .Values.backend.autoscaling.enabled }}
-  replicas: {{ .Values.backend.replicaCount }}
-  {{- end }}
+  replicas: { { .Values.backend.replicaCount } }
   selector:
     matchLabels:
-      {{- include "green-banking.backend.selectorLabels" . | nindent 6 }}
+      { { - include "green-banking.backend.selectorLabels" . | nindent 6 } }
   template:
     metadata:
-      labels:
-        {{- include "green-banking.backend.labels" . | nindent 8 }}
-      annotations:
-        {{- toYaml .Values.backend.podAnnotations | nindent 8 }}
+      labels: { { - include "green-banking.backend.labels" . | nindent 8 } }
+      annotations: { { - toYaml .Values.backend.podAnnotations | nindent 8 } }
     spec:
-      {{- with .Values.backend.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      serviceAccountName: {{ include "green-banking.backend.serviceAccountName" . }}
-      securityContext:
-        {{- toYaml .Values.backend.podSecurityContext | nindent 8 }}
       containers:
         - name: backend
           image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
-          imagePullPolicy: {{ .Values.backend.image.pullPolicy }}
+          imagePullPolicy: { { .Values.backend.image.pullPolicy } }
           ports:
-            - containerPort: {{ .Values.backend.service.port }}
+            - containerPort: { { .Values.backend.service.port } }
               name: http
-          livenessProbe:
-            {{- toYaml .Values.backend.livenessProbe | nindent 12 }}
-          readinessProbe:
-            {{- toYaml .Values.backend.readinessProbe | nindent 12 }}
-          resources:
-            {{- toYaml .Values.backend.resources | nindent 12 }}
           env:
             - name: MONGO_URI
-              value: {{ .Values.backend.mongoUri }}
+              value: { { .Values.backend.mongoUri } }
             - name: PORT
               value: "5000"
-      {{- with .Values.backend.volumeMounts }}
-      volumeMounts:
-        {{- toYaml . | nindent 12 }}
-      {{- end }}
-      {{- with .Values.backend.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.backend.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.backend.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.backend.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+          resources: { { - toYaml .Values.backend.resources | nindent 12 } }
