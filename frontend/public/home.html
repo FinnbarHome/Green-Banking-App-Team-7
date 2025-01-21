@@ -1,0 +1,103 @@
+<!doctype html>
+<html>
+<head>
+    <style>
+        /* Ensures black text */
+        input, textarea, select {
+          color: black !important;
+        }
+    </style>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="./output.css" rel="stylesheet"> 
+    <title>EcoCents - Home</title>
+</head>
+<body class="bg-gray-900 flex flex-col min-h-screen">
+    <nav class="bg-green-900">
+        <div class="mx-auto max-w-7xl px-2 sm:px-6 lg:px-8">
+            <div class="relative flex h-16 items-center justify-between">
+                <h1 class="flex flex-shrink-0 items-center text-white font-bold ml-3">EcoCents</h1>
+
+                <!-- Hamburger Menu -->
+                <div class="flex items-center">
+                    <button id="menuToggle" class="text-white focus:outline-none">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Expanded Hamburger -->
+            <div id="mobileMenu" class="hidden">
+                <a href="home.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Account</a>
+                <a href="payment.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Pay</a>
+                <a href="rewards.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Rewards</a>
+                <a href="login.html" class="block px-3 py-2 text-gray-400 hover:bg-green-700 hover:text-white">Sign Out</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container my-5 mx-auto flex-grow">
+        <div class="mx-5 lg:mx-60">
+            <h1 class="text-3xl font-bold text-white mt-5 text-center mb-4">Account</h1>
+            
+            <!-- Account Info Section -->
+            <div class="flex border-2 py-5 border-x-0 border-green-800">
+                <div class="bg-gray-700 border-2 rounded-lg p-2 px-5 w-screen">
+                    <div class="rounded-md">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="float-left bg-gray-400 rounded-full p-1 border-2 h-28 w-28" viewBox="0 0 448 512">
+                            <path d="M224 256A128 128 0 1 0 224 0a128 128 0 1 0 0 256zm-45.7 48C79.8 304 0 383.8 0 482.3C0 498.7 13.3 512 29.7 512l388.6 0c16.4 0 29.7-13.3 29.7-29.7C448 383.8 368.2 304 269.7 304l-91.4 0z"/>
+                        </svg>
+                    </div>
+                    <div class="text-center py-2">
+                        <h2 id="Username" class="text-white font-bold">Username:</h2>
+                        <h2 id="AccountNumber" class="text-white font-bold">Account Number:</h2>
+                        <h2 id="Balance" class="text-white">Account Balance:</h2>
+                        <h2 id="Level" class="text-white">Level:</h2>
+                        <h2 id="XP" class="text-white">XP Level:</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction History Section -->
+            <h1 class="text-xl font-bold text-white mt-5 text-center mb-4">Your Transaction History</h1>
+            <div id="pastPayments" class="mt-5 mb-5 border-green-800 border-2 border-t-0 border-x-0">
+                <p class="bg-orange-700"></p>
+                <p class="bg-red-900"></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="bg-green-900 mt-auto">
+        <div class="mx-auto p-4 text-center items-center justify-between">
+            <h1 class="text-gray-400">© 2024 EcoCents</h1>
+            <!-- Light mode toggle -->
+            <button id="themeToggle" class="mt-4 px-3 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">
+            Toggle Light Mode
+            </button>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const menuToggle = document.getElementById('menuToggle');
+            const mobileMenu = document.getElementById('mobileMenu');
+
+            menuToggle.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+        });
+    </script>
+
+    <!-- Fetches and displays account and transaction data -->
+    <script type="module" src="scripts/fetchAccountData.js"></script>
+    <!-- Checks admin privileges -->
+    <script type="module" src="scripts/checkAdminPrivileges.js"></script>
+    <script type="module" src="scripts/levelingForHome.js"></script>
+    <!-- Checks dark mode / light mode button -->
+    <script type="module" src="scripts/darkLightButton.js"></script>
+</body>
+</html>
