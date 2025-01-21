@@ -44,16 +44,16 @@ Thanks for sharing the project structure! Based on the actual structure, here’
 │   ├── 📂 config            # Configuration files (e.g., MongoDB connection)
 │   ├── 📂 middleware        # Middleware for Express.js
 │   ├── 📂 routes            # API routes (e.g., companies, transactions, discounts)
-│   ├── 📂 tests             # Test files for backend functionality
+│   ├── 📂 tests             # Test files for backend functionality (Jest)
 │   ├── server.js            # Main backend server entry point
 │   ├── websocket.js         # WebSocket setup and notification logic
 │   ├── package.json         # Backend dependencies
-│   └── .env                 # Environment variables (not included in the repository)
+│   └── .env                 # Environment variables
 ├── 📁 frontend              # Frontend-related files
-│   ├── 📂 config            # Frontend configuration (e.g., API endpoints)
 │   ├── 📂 public            # Public assets
 │   │   ├── 📂 images        # Static images
 │   │   ├── 📂 scripts       # Client-side JavaScript files
+│   │   ├── 📂 test_htmls    # html/.js files for testing functions
 │   │   ├── admin.html       # Admin page
 │   │   ├── analysis.html    # Analysis page
 │   │   ├── confirmation.html # Payment confirmation page
@@ -64,12 +64,12 @@ Thanks for sharing the project structure! Based on the actual structure, here’
 │   │   ├── rewards.html     # Rewards overview page
 │   │   ├── signup.html      # Signup page
 │   │   ├── styles.css       # Main stylesheet
-│   │   ├── output.css       # Compiled TailwindCSS
-│   └── frontend-server.js   # Frontend development server
-├── tailwind.config.js       # TailwindCSS configuration
+│   │   └── output.css       # Compiled TailwindCSS
+│   ├── frontend-server.js   # Frontend node server
+│   ├── package.json         # Frontend dependencies
+│   └── tailwind.config.js   # TailwindCSS configuration
 ├── README.md                # Project documentation
-├── .gitignore               # Files and folders ignored by Git
-└── .env                     # Environment variables (shared across backend and frontend)
+└── .gitignore               # Files and folders ignored by Git
 ```
 
 ---
