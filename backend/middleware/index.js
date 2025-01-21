@@ -10,7 +10,7 @@ const setupMiddleware = (app) => {
   // app.use(helmet()); // Uncomment if supported in future deployment
 
   // Enable CORS
-  app.use(cors());
+  app.use(cors({ origin: "http://localhost:4000" })); // Allow requests from the frontend server
 
   // Request parsing
   app.use(express.json()); // Parse incoming JSON
