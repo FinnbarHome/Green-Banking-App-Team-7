@@ -6,7 +6,6 @@ backend:
     pullPolicy: IfNotPresent
   mongoUri: "your-mongo-uri"
   service:
-    type: ClusterIP
     port: 5000
   resources:
     requests:
@@ -15,23 +14,6 @@ backend:
     limits:
       memory: "256Mi"
       cpu: "500m"
-  livenessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 10
-    periodSeconds: 10
-  readinessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 5
-    periodSeconds: 10
-  nodeSelector: {}
-  affinity: {}
-  tolerations: {}
-  volumeMounts: []
-  volumes: []
 
 frontend:
   replicaCount: 2
@@ -41,7 +23,6 @@ frontend:
     pullPolicy: IfNotPresent
   backendUrl: "http://backend-service:5000"
   service:
-    type: NodePort
     port: 3000
   resources:
     requests:
@@ -50,8 +31,3 @@ frontend:
     limits:
       memory: "128Mi"
       cpu: "250m"
-  nodeSelector: {}
-  affinity: {}
-  tolerations: {}
-  volumeMounts: []
-  volumes: []
