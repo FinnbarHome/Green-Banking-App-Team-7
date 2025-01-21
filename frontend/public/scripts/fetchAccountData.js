@@ -3,6 +3,12 @@ import CONFIG from "./config.js";
 // Get the API backend base URL from the config file
 const API_BASE_URL = CONFIG.API_BASE_URL;
 
+// Remove '/api' from the end and assign to a new variable (for ws)
+const BASE_URL = API_BASE_URL.replace(/\/api$/, "");
+
+// Remove protocol from BASE_URL and prepend 'ws://'
+const wsUrl = `ws://${BASE_URL.split("//")[1]}`;
+
 let ws;
 
 // General function to make API requests
@@ -31,7 +37,7 @@ async function apiRequest(endpoint, method = "GET", body = null) {
 
 // WebSocket initialization
 function initializeWebSocket(accountNumber) {
-  ws = new WebSocket(`ws://${API_BASE_URL}`);
+  ws = new WebSocket(wsUrl);
 
   ws.onopen = () => {
     console.log("WebSocket connection opened");
@@ -215,6 +221,27 @@ function Levels() {
     levelBounds.push(Math.round(Math.pow(i / denominator, power)));
   }
   return levelBounds;
+}
+
+// Calculate the background color for a transaction
+function getBgColor(companyData) {
+  const maxCatScore = 30; // Maximum score for environmental categories
+  const carbonEmissions = companyData["Carbon Emissions"] || 0;
+  const wasteManagement = companyData["Waste Management"] || 0;
+  const sustainabilityPractices = companyData["Sustainability Practices"] || 0;
+
+  const totalScore =
+    carbonEmissions + wasteManagement + sustainabilityPractices;
+  const normalizedScore = totalScore / maxCatScore;
+
+  // Determine the color based on the normalized score
+  if (normalizedScore >= 0.7) {
+    return "bg-green-900"; // Green for high sustainability
+  } else if (normalizedScore >= 0.3) {
+    return "bg-orange-900"; // Orange for medium sustainability
+  } else {
+    return "bg-red-900"; // Red for low sustainability
+  }
 }
 
 // Trigger fetchAccountData on page load
