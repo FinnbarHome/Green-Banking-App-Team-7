@@ -1,4 +1,31 @@
-// Calculates the level boundaries
+// Base URL for API requests
+const API_BASE_URL = "http://localhost:3000/api"; // Backend server URL
+
+// General function to make API requests
+async function apiRequest(endpoint, method = "GET", body = null) {
+  const url = `${API_BASE_URL}${endpoint}`; // Construct full URL
+  const options = {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+    },
+  };
+  if (body) options.body = JSON.stringify(body);
+
+  try {
+    const response = await fetch(url, options);
+    if (!response.ok) {
+      const { error } = await response.json();
+      throw new Error(error || `Failed to ${method} at ${url}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error(`API Request Error: ${error.message}`);
+    throw error;
+  }
+}
+
+// Calculate level boundaries
 function Levels() {
   const power = 2.5;
   const denominator = 0.3;
@@ -12,7 +39,7 @@ function Levels() {
   return levelBounds;
 }
 
-// Calculates the user's current level via XP
+// Calculate the user's current level via XP
 function calculateUserLevel(userXP) {
   const levelBounds = Levels();
   let level = 0;
@@ -44,29 +71,19 @@ function calculateUserLevel(userXP) {
     progressPercentage = 100;
   }
 
-  // Return the data
   return {
     level: level,
     progressPercentage: Math.round(progressPercentage * 100) / 100,
     currentXP: userXP,
-    nextLevelXP: NextLevel
+    nextLevelXP: NextLevel,
   };
 }
 
-// Calculates the XP based on the transaction amount
+// Calculate XP and update account
 export async function xp(accountNumber, transactionAmount) {
   try {
-    const response = await fetch(`/api/companies/${accountNumber}`, {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch company data');
-    }
-
-    const companyData = await response.json();
-
+    // Fetch account data from the backend
+    const companyData = await apiRequest(`/companies/${accountNumber}`, "GET");
     let {
       XP: userXP = 0,
       CarbonEmissions: CE = 0,
@@ -74,80 +91,68 @@ export async function xp(accountNumber, transactionAmount) {
       SustainabilityPractices: SP = 0,
     } = companyData;
 
+    // Calculate environmental impact score (EIS)
     const maxCatScore = 30;
-    const greenThreshold = 0.7;
-    const redThreshold = 0.3;
+    const categoryScore = CE + WM + SP;
+    const envImpactScore = categoryScore / maxCatScore;
 
-    let categoryScore = CE + WM + SP;
-    let envImpactScore = categoryScore / maxCatScore;
-
-    let XPGain = Math.round(envImpactScore * transactionAmount);
+    // Calculate XP gain based on the transaction amount and EIS
+    const XPGain = Math.round(envImpactScore * transactionAmount);
     userXP += XPGain;
 
-    const updateXPResponse = await fetch(`/api/companies/update-xp/${accountNumber}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ xpAmount: XPGain })
+    // Update the user's XP in the backend
+    await apiRequest(`/companies/update-xp/${accountNumber}`, "PUT", {
+      xpAmount: XPGain,
     });
 
-    if (!updateXPResponse.ok) {
-      throw new Error('Failed to update XP');
-    }
-
-    let levelInfo = calculateUserLevel(userXP);
+    // Calculate the updated level information
+    const levelInfo = calculateUserLevel(userXP);
 
     return {
       XPGain,
       userXP,
       level: levelInfo.level,
-      progressPercentage: levelInfo.progressPercentage
+      progressPercentage: levelInfo.progressPercentage,
     };
   } catch (error) {
-    console.error('Error in xp function:', error);
+    console.error("Error in XP function:", error);
     throw error;
   }
 }
 
-// Calculates the green alternative companies
-async function greenAlternatives(spendingCategory) {
+// Calculate green alternative companies
+export async function greenAlternatives(spendingCategory) {
   try {
-    const response = await fetch('/api/companies', {
-      method: 'GET',
-      headers: { 'Content-Type': 'application/json' }
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch companies data');
-    }
-
-    const companies = await response.json();
+    const companies = await apiRequest("/companies", "GET");
 
     return companies
-      .filter(company => 
-        company.SpendingCategory === spendingCategory && 
-        calculateEIS(company) >= 0.7
+      .filter(
+        (company) =>
+          company.SpendingCategory === spendingCategory &&
+          calculateEIS(company) >= 0.7
       )
       .sort((a, b) => calculateEIS(b) - calculateEIS(a))
       .slice(0, 3);
   } catch (error) {
-    console.error('Error in greenAlternatives function:', error);
+    console.error("Error in greenAlternatives function:", error);
     throw error;
   }
 }
 
-// Calculates the EIS of a company
+// Calculate the Environmental Impact Score (EIS) for a company
 function calculateEIS(company) {
   const maxCatScore = 30;
-  const categoryScore = (company.CarbonEmissions || 0) + 
-                        (company.WasteManagement || 0) + 
-                        (company.SustainabilityPractices || 0);
+  const categoryScore =
+    (company.CarbonEmissions || 0) +
+    (company.WasteManagement || 0) +
+    (company.SustainabilityPractices || 0);
   return categoryScore / maxCatScore;
 }
-  function transaction(transactionAmount, accountBalance)
-  {
-    accountBalance =- transactionAmount;
 
-    return accountBalance;
-  }
+// Simulate a transaction by deducting amount from balance
+export function transaction(transactionAmount, accountBalance) {
+  accountBalance -= transactionAmount;
+  return accountBalance;
+}
 
-  module.exports = { xp };
+export default { xp, greenAlternatives };
