@@ -8,6 +8,9 @@ const { setupWebSocket } = require("./websocket");
 
 const app = express();
 
+// Trust the proxy (e.g., NGINX Ingress Controller)
+app.set('trust proxy', true);
+
 // Validate environment variables
 const validateEnvVars = () => {
   const requiredEnvVars = ["PORT", "MONGO_URI"];

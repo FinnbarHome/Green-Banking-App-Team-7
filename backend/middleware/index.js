@@ -26,6 +26,10 @@ const setupMiddleware = (app) => {
     windowMs: 60 * 60 * 1000, // 60 minutes
     max: 250, // Max 250 requests per IP
     message: "Too many requests, please try again later.",
+    keyGenerator: (req) => {
+      // Use the request IP address (as determined by trust proxy setting)
+      return req.ip;
+    },
   });
   app.use(limiter);
 
