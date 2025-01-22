@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: frontend:v4
+          image: frontend:v5
           ports:
             - containerPort: 4000
           envFrom:

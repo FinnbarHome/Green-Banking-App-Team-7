@@ -14,7 +14,7 @@ RUN npm install --production --no-cache
 COPY . .
 
 # Expose the backend port dynamically
-EXPOSE 5000
+EXPOSE 4000
 
 # Start the frontend server
 CMD ["npm", "start"]
