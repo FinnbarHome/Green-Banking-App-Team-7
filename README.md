@@ -1,6 +1,22 @@
+Here's the updated **README.md** with a clearer introduction highlighting that the project was later enhanced by Finnbar Home:
+
+---
+
 # Green Banking App 🌱
 
-This project is a **Green Banking Application** developed as part of a university project in collaboration with **Barclays** representatives. The app assigns sustainability scores based on users' transactions with companies, encouraging eco-friendly financial decisions by providing detailed insights and rewards for environmentally conscious spending.
+This project is a **Green Banking Application** originally developed as part of a university project in collaboration with **Barclays** representatives. The app assigns sustainability scores based on users' transactions with companies, encouraging eco-friendly financial decisions by providing detailed insights and rewards for environmentally conscious spending.
+
+After the initial completion, the project was **overtaken and further enhanced by Finnbar**, who introduced significant improvements to the deployment, scalability, and maintainability of the application. These enhancements included containerizing the app using Docker, deploying it on Kubernetes using Helm, and optimizing its architecture for modern cloud-native environments.
+
+---
+
+## Key Updates (Finnbar)
+
+- **Transition to Docker & Kubernetes**: Containerized both the frontend and backend for seamless deployment and scalability.
+- **Helm Integration**: Parameterized the deployment for flexibility and better resource management.
+- **Ingress Controller Setup**: Simplified access and load balancing with an ingress setup on Kubernetes.
+- **Enhanced Scalability**: Modularized the frontend and backend, enabling independent scaling and management.
+- **Improved Deployment Workflow**: Introduced a more streamlined and cloud-friendly deployment process using Minikube for local development.
 
 ---
 
@@ -18,7 +34,6 @@ This project is a **Green Banking Application** developed as part of a universit
 ## Tech Stack
 
 ### Backend:
-
 - **Node.js**: Handles API logic and server-side functionality.
 - **Express.js**: Framework for building RESTful APIs.
 - **MongoDB**: NoSQL database for storing user, company, and transaction data.
@@ -26,20 +41,31 @@ This project is a **Green Banking Application** developed as part of a universit
 - **WebSocket (ws)**: Enables real-time updates for transactions and account data.
 
 ### Frontend:
-
 - **HTML/CSS (TailwindCSS)**: Responsive UI design.
 - **JavaScript**: Handles client-side functionality, including dynamic rendering and API communication.
 
+### Deployment Tools:
+- **Docker**: Containerization for both frontend and backend.
+- **Kubernetes**: Orchestrates containers and manages deployments.
+- **Helm**: Simplifies and parameterizes Kubernetes deployments.
+- **Minikube**: Local Kubernetes cluster for development.
+
 ---
 
-Thanks for sharing the project structure! Based on the actual structure, here’s an updated project structure section for the `README.md`:
+## Deployment Enhancements (Helm & Kubernetes)
+
+The updated deployment strategy includes:
+- **Minikube for Local Development**: Simplifies local Kubernetes cluster setup.
+- **Helm Charts**: Parameterized deployments for the frontend, backend, and ingress, enabling easy configuration and scaling.
+- **Ingress Controller**: Allows accessing the app via a single domain and enables load balancing between pods.
+- **Dockerized Services**: Frontend and backend are containerized for seamless deployment.
 
 ---
 
 ## Project Structure
 
 ```
-📂 GREEN-BANKING-APP-TEAM-7
+📂 GREEN-BANKING-APP
 ├── 📁 backend               # Backend-related files
 │   ├── 📂 config            # Configuration files (e.g., MongoDB connection)
 │   ├── 📂 middleware        # Middleware for Express.js
@@ -47,6 +73,7 @@ Thanks for sharing the project structure! Based on the actual structure, here’
 │   ├── 📂 tests             # Test files for backend functionality (Jest)
 │   ├── server.js            # Main backend server entry point
 │   ├── websocket.js         # WebSocket setup and notification logic
+│   ├── Dockerfile           # Dockerfile for backend containerization
 │   ├── package.json         # Backend dependencies
 │   └── .env                 # Environment variables
 ├── 📁 frontend              # Frontend-related files
@@ -66,85 +93,67 @@ Thanks for sharing the project structure! Based on the actual structure, here’
 │   │   ├── styles.css       # Main stylesheet
 │   │   └── output.css       # Compiled TailwindCSS
 │   ├── frontend-server.js   # Frontend node server
+│   ├── Dockerfile           # Dockerfile for frontend containerization
 │   ├── package.json         # Frontend dependencies
 │   └── tailwind.config.js   # TailwindCSS configuration
+├── 📁 helm-chart            # Helm chart for Kubernetes deployment
+│   ├── 📂 templates         # Kubernetes manifests (Ingress, Deployments, Services)
+│   ├── values.yaml          # Helm chart configuration values
+│   ├── Chart.yaml           # Helm chart metadata
+│   └── README.md            # Instructions for using the Helm chart
 ├── README.md                # Project documentation
 └── .gitignore               # Files and folders ignored by Git
 ```
 
 ---
 
-## Key Functionality
+## Deployment Instructions
 
-1. **Environmental Impact Score (EIS)**:
+### Prerequisites
+- **Minikube** installed
+- **Helm** installed.
+- **Docker** installed.
 
-   - Combines factors such as Carbon Emissions, Waste Management, and Sustainability Practices.
-   - Companies are rated on a scale, and user transactions with greener companies result in XP gains.
+### Steps
 
-2. **Real-Time Updates**:
-
-   - WebSocket integration allows for live updates of user account balances and streaks.
-
-3. **Leveling System**:
-
-   - Users gain XP and unlock new levels by maintaining eco-friendly spending habits.
-   - Rewards like discounts from green companies are provided.
-
-4. **Admin Features**:
-   - Admins can add or remove discounts and view company sustainability data.
-
----
-
-## Installation and Setup
-
-1. Clone the repository:
-
+1. **Clone the repository**:
    ```bash
    git clone https://github.com/your-username/green-banking-app.git
    cd green-banking-app
    ```
 
-2. Install backend dependencies:
-
+2. **Build Docker Images**:
+   Configure Docker to use Minikube:
    ```bash
-   cd backend
-   npm install
+   eval $(minikube docker-env)
    ```
-
-3. Install frontend dependencies:
-
+   Build images for frontend and backend:
    ```bash
-   cd ../frontend
-   npm install
+   docker build -t frontend:v1 -f ./frontend/Dockerfile ./frontend
+   docker build -t backend:v1 -f ./backend/Dockerfile ./backend
    ```
 
-4. Create a `.env` file in the `backend` folder with the following variables:
-
-   ```
-   PORT=5000
-   MONGO_URI=<your_mongodb_connection_string>
-   ```
-
-5. Start the backend server:
-
+3. **Enable Ingress in Minikube**:
    ```bash
-   cd backend
-   npm start
+   minikube addons enable ingress
    ```
 
-6. Serve the frontend:
+4. **Deploy Using Helm**:
+   Navigate to the Helm chart directory and install the app:
    ```bash
-   cd ../frontend
-   npm run start
+   cd helm-chart
+   helm install green-banking .
    ```
 
----
-
-## About the Project
-
-This project was developed as part of a university project in collaboration with **Barclays** representatives, who provided feedback and evolving requirements throughout the process.
-
-After the initial completion, the project was revisited and updated by **Finnbar Home**, with several enhancements:
-
-- Splitting the backend and frontend into separate components for better scalability and maintainability.
-- Additional restructuring and refactoring to improve code readability and efficiency.
+5. **Access the Application**:
+   - Find the Minikube IP:
+     ```bash
+     minikube ip
+     ```
+   - Add the following entry to your `/etc/hosts` (replace `<minikube-ip>` with the IP):
+     ```
+     <minikube-ip> my-app.local
+     ```
+   - Access the application:
+     - Frontend: `http://my-app.local/frontend`
+     - Backend: `http://my-app.local/backend`
