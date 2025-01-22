@@ -1,0 +1,11 @@
+frontend:
+  replicas: 2
+  port: 4000
+
+backend:
+  replicas: 2
+  port: 5000
+  mongoUri: mongodb://mongo-server:27017/mydatabase
+
+ingress:
+  host: my-app.local
