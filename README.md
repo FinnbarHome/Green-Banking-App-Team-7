@@ -2,7 +2,7 @@ Here's the updated **README.md** with a clearer introduction highlighting that t
 
 ---
 
-# Green Banking App 🌱
+# Green Banking App 🌱 (WORK IN PROGRESS)
 
 This project is a **Green Banking Application** originally developed as part of a university project in collaboration with **Barclays** representatives. The app assigns sustainability scores based on users' transactions with companies, encouraging eco-friendly financial decisions by providing detailed insights and rewards for environmentally conscious spending.
 
